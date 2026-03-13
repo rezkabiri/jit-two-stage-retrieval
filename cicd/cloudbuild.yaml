@@ -43,6 +43,8 @@ steps:
 
 substitutions:
   _REGION: 'us-central1'
+  _STAGING_PROJECT_ID: ''
+  _PROD_PROJECT_ID: ''
 
 options:
   logging: CLOUD_LOGGING_ONLY
