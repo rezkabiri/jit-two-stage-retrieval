@@ -6,42 +6,66 @@
 # _REGION: us-central1 (default)
 
 steps:
-  # --- STAGE 0: BUILD AND PUSH IMAGES ---
-  # Build Agent
+  # --- STAGE 0: PREPARE CACHE ---
+  # Pull the latest image to use as cache-from (if it exists)
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-cache-agent'
+    entrypoint: 'bash'
+    args: ['-c', 'docker pull ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:latest || true']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-cache-ui'
+    entrypoint: 'bash'
+    args: ['-c', 'docker pull ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:latest || true']
+
+  # --- STAGE 1: BUILD AND PUSH IMAGES ---
+  # Build Agent (with caching)
   - name: 'gcr.io/cloud-builders/docker'
     id: 'build-agent'
     dir: 'app'
-    args: ['build', '-t', '${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA}', '.']
+    args: [
+      'build', 
+      '-t', '${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA}', 
+      '-t', '${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:latest',
+      '--cache-from', '${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:latest',
+      '.'
+    ]
 
-  # Push Agent
-  - name: 'gcr.io/cloud-builders/docker'
-    id: 'push-agent'
-    args: ['push', '${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA}']
-
-  # Build UI
+  # Build UI (with caching)
   - name: 'gcr.io/cloud-builders/docker'
     id: 'build-ui'
     dir: 'frontend'
-    args: ['build', '-t', '${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA}', '.']
+    args: [
+      'build', 
+      '-t', '${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA}', 
+      '-t', '${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:latest',
+      '--cache-from', '${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:latest',
+      '.'
+    ]
 
-  # Push UI
+  # Push Images
   - name: 'gcr.io/cloud-builders/docker'
-    id: 'push-ui'
-    args: ['push', '${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA}']
+    id: 'push-images'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        docker push ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA}
+        docker push ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:latest
+        docker push ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA}
+        docker push ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:latest
 
-  # --- STAGE 1: DEPLOY TO STAGING ---
+  # --- STAGE 2: DEPLOY TO STAGING ---
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'deploy-stage'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        # Deploy Agent to Stage
         gcloud run deploy rag-agent-stage --project=${_STAGING_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
-        # Deploy UI to Stage
         gcloud run deploy rag-ui-stage --project=${_STAGING_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
 
-  # --- STAGE 2: EVALUATION GATE ---
+  # --- STAGE 3: EVALUATION GATE ---
   - name: 'python:3.11'
     id: 'eval-stage'
     entrypoint: 'bash'
@@ -50,25 +74,22 @@ steps:
       - |
         pip install -r app/requirements.txt
         # make eval --project=${_STAGING_PROJECT_ID}
-        # If eval score < 0.8, this step will exit with 1, halting the build.
 
-  # --- STAGE 3: DEPLOY TO PRODUCTION ---
+  # --- STAGE 4: DEPLOY TO PRODUCTION ---
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'deploy-prod'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        # Tag and Push for Production
         docker tag ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} ${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/agent:${SHORT_SHA}
         docker tag ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} ${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/ui:${SHORT_SHA}
-        gcloud docker -- push ${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/agent:${SHORT_SHA}
-        gcloud docker -- push ${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/ui:${SHORT_SHA}
+        # Push to Prod AR
+        docker push ${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/agent:${SHORT_SHA}
+        docker push ${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/ui:${SHORT_SHA}
         
-        # Deploy Agent to Prod
         gcloud run deploy rag-agent-prod --project=${_PROD_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
-        # Deploy UI to Prod
-        gcloud run deploy rag-ui-prod --project=${_PROD_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
+        gcloud run deploy rag-ui-prod --project=${_PROD_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-ui-prod:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
 
 substitutions:
   _REGION: 'us-central1'

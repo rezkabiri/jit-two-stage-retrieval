@@ -12,11 +12,17 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Pre-download the Cross-Encoder model to avoid timeout at startup
+RUN python -c "from sentence_transformers import CrossEncoder; CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')"
+
 # Copy agent code
 COPY . .
+
+# Ensure the app is in the Python path
+ENV PYTHONPATH=/app
 
 # Expose the port (ADK defaults to 8080)
 EXPOSE 8080
 
-# Command to run the agent (assuming ADK uses a standard entry point)
+# Command to run the agent
 CMD ["python", "-m", "google.adk.runner", "--port", "8080"]
