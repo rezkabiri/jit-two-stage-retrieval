@@ -6,6 +6,29 @@
 # _REGION: us-central1 (default)
 
 steps:
+  # --- STAGE 0: BUILD AND PUSH IMAGES ---
+  # Build Agent
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-agent'
+    dir: 'app'
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA}', '.']
+
+  # Push Agent
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-agent'
+    args: ['push', '${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA}']
+
+  # Build UI
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-ui'
+    dir: 'frontend'
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA}', '.']
+
+  # Push UI
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-ui'
+    args: ['push', '${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA}']
+
   # --- STAGE 1: DEPLOY TO STAGING ---
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'deploy-stage'
@@ -36,6 +59,12 @@ steps:
     args:
       - '-c'
       - |
+        # Tag and Push for Production
+        docker tag ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} ${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/agent:${SHORT_SHA}
+        docker tag ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} ${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/ui:${SHORT_SHA}
+        gcloud docker -- push ${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/agent:${SHORT_SHA}
+        gcloud docker -- push ${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/ui:${SHORT_SHA}
+        
         # Deploy Agent to Prod
         gcloud run deploy rag-agent-prod --project=${_PROD_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
         # Deploy UI to Prod
@@ -48,3 +77,7 @@ substitutions:
 
 options:
   logging: CLOUD_LOGGING_ONLY
+
+images:
+  - '${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA}'
+  - '${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA}'
