@@ -1,0 +1,68 @@
+# infrastructure/modules/cloud_run/main.tf
+
+variable "project_id" { type = string }
+variable "region" { type = string }
+variable "env" { type = string }
+variable "agent_image" { type = string }
+variable "ui_image" { type = string }
+variable "data_store_id" { type = string }
+
+# 1. ADK Agent Service
+resource "google_cloud_run_v2_service" "agent" {
+  name     = "rag-agent-${var.env}"
+  location = var.region
+  project  = var.project_id
+  ingress  = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER" # Only allow traffic via LB
+
+  template {
+    containers {
+      image = var.agent_image
+      env {
+        name  = "GOOGLE_CLOUD_PROJECT"
+        value = var.project_id
+      }
+      env {
+        name  = "DATA_STORE_ID"
+        value = var.data_store_id
+      }
+    }
+  }
+}
+
+# 2. React UI Service
+resource "google_cloud_run_v2_service" "ui" {
+  name     = "rag-ui-${var.env}"
+  location = var.region
+  project  = var.project_id
+  ingress  = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
+
+  template {
+    containers {
+      image = var.ui_image
+    }
+  }
+}
+
+# 3. Serverless NEGs for the Load Balancer
+resource "google_compute_region_network_endpoint_group" "agent_neg" {
+  name                  = "agent-neg-${var.env}"
+  network_endpoint_type = "SERVERLESS"
+  region                = var.region
+  project               = var.project_id
+  cloud_run {
+    service = google_cloud_run_v2_service.agent.name
+  }
+}
+
+resource "google_compute_region_network_endpoint_group" "ui_neg" {
+  name                  = "ui-neg-${var.env}"
+  network_endpoint_type = "SERVERLESS"
+  region                = var.region
+  project               = var.project_id
+  cloud_run {
+    service = google_cloud_run_v2_service.ui.name
+  }
+}
+
+output "agent_neg_id" { value = google_compute_region_network_endpoint_group.agent_neg.id }
+output "ui_neg_id" { value = google_compute_region_network_endpoint_group.ui_neg.id }

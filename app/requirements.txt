@@ -1,0 +1,8 @@
+# app/requirements.txt
+google-adk
+google-cloud-discoveryengine
+google-cloud-aiplatform
+google-cloud-storage
+google-cloud-bigquery
+sentence-transformers
+pytest

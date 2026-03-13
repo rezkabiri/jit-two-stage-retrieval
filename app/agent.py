@@ -1,0 +1,42 @@
+# app/agent.py
+import os
+from google.adk import Agent, Model
+from .tools.retriever import stage_1_retrieval
+from .tools.feedback import record_feedback
+from .reranker import Reranker
+
+# Configuration
+PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
+LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1") # Standard Vertex AI location
+MODEL_NAME = "gemini-3-flash-preview"
+
+# Initialize Stage 2 Reranker
+reranker = Reranker()
+
+# Stage 2: Reasoning & Reranking Agent
+root_agent = Agent(
+    name="two_stage_rag_agent",
+    model=Model(
+        name=MODEL_NAME,
+        project=PROJECT_ID,
+        location=LOCATION,
+    ),
+    instruction="""
+    You are a high-fidelity intelligence agent specializing in secure information retrieval.
+    You operate in a two-stage retrieval process:
+    1.  **Stage 1 (Retrieval)**: Use the `stage_1_retrieval` tool to fetch documents based on the user's query and their authenticated email.
+    2.  **Stage 2 (Reasoning & Reranking)**: Carefully analyze the retrieved documents. 
+        -   **Refinement**: Use your internal reasoning (or call the `reranker` logic) to filter out irrelevant or lower-quality snippets.
+        -   **Grounding**: Ensure the final answer is directly supported by the most relevant reranked context.
+        -   **Precision**: Prioritize documents with higher semantic relevance to the user's specific query.
+    
+    **Instructions**:
+    -   Always use the `stage_1_retrieval` tool for any informational query.
+    -   Extract the user's email from the session context (if available).
+    -   Cite your sources clearly using the document title or link provided.
+    -   If no relevant information is found, state that you do not have the answer. Do not hallucinate.
+    -   Maintain a professional and precise tone.
+    -   If a user provides explicit feedback (thumbs up/down), use the `record_feedback` tool to log it to BigQuery.
+    """,
+    tools=[stage_1_retrieval, record_feedback],
+)

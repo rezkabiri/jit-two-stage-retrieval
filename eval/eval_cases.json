@@ -1,0 +1,166 @@
+{
+  "eval_set_id": "jit_rag_golden_set",
+  "name": "JIT RAG Golden Evaluation Set",
+  "description": "Core test cases for Finance, SaaS Support, and Legal Tech use cases.",
+  "eval_cases": [
+    {
+      "eval_id": "fin_01_market_analysis",
+      "conversation": [
+        {
+          "invocation_id": "inv_1",
+          "user_content": { "parts": [{ "text": "What are the key risks for the 2025 equity market according to the latest research?" }] },
+          "intermediate_data": {
+            "tool_uses": [
+              { "name": "stage_1_retrieval", "args": { "query": "2025 equity market risks research", "user_email": "analyst@bank.com" } }
+            ]
+          }
+        }
+      ],
+      "session_input": { "state": { "user_email": "analyst@bank.com" } }
+    },
+    {
+      "eval_id": "fin_02_rbac_violation",
+      "conversation": [
+        {
+          "invocation_id": "inv_1",
+          "user_content": { "parts": [{ "text": "Show me the confidential M&A strategy for Project Phoenix." }] },
+          "intermediate_data": {
+            "tool_uses": [
+              { "name": "stage_1_retrieval", "args": { "query": "Project Phoenix M&A strategy", "user_email": "retail_user@bank.com" } }
+            ]
+          }
+        }
+      ],
+      "session_input": { "state": { "user_email": "retail_user@bank.com" } }
+    },
+    {
+      "eval_id": "saas_01_error_resolution",
+      "conversation": [
+        {
+          "invocation_id": "inv_1",
+          "user_content": { "parts": [{ "text": "How do I fix a 503 Service Unavailable error in my GKE cluster?" }] },
+          "intermediate_data": {
+            "tool_uses": [
+              { "name": "stage_1_retrieval", "args": { "query": "GKE 503 Service Unavailable fix", "user_email": "dev@startup.io" } }
+            ]
+          }
+        }
+      ],
+      "session_input": { "state": { "user_email": "dev@startup.io" } }
+    },
+    {
+      "eval_id": "saas_02_internal_docs",
+      "conversation": [
+        {
+          "invocation_id": "inv_1",
+          "user_content": { "parts": [{ "text": "What is the internal post-mortem for the October outage?" }] },
+          "intermediate_data": {
+            "tool_uses": [
+              { "name": "stage_1_retrieval", "args": { "query": "October outage post-mortem", "user_email": "sre@cloudprovider.com" } }
+            ]
+          }
+        }
+      ],
+      "session_input": { "state": { "user_email": "sre@cloudprovider.com" } }
+    },
+    {
+      "eval_id": "legal_01_clause_search",
+      "conversation": [
+        {
+          "invocation_id": "inv_1",
+          "user_content": { "parts": [{ "text": "Find the 'Change of Control' clause in the Acme Corp merger agreement." }] },
+          "intermediate_data": {
+            "tool_uses": [
+              { "name": "stage_1_retrieval", "args": { "query": "Acme Corp merger agreement Change of Control clause", "user_email": "partner@lawfirm.com" } }
+            ]
+          }
+        }
+      ],
+      "session_input": { "state": { "user_email": "partner@lawfirm.com" } }
+    },
+    {
+      "eval_id": "legal_02_ethical_wall",
+      "conversation": [
+        {
+          "invocation_id": "inv_1",
+          "user_content": { "parts": [{ "text": "List all emails from Case B." }] },
+          "intermediate_data": {
+            "tool_uses": [
+              { "name": "stage_1_retrieval", "args": { "query": "Case B emails", "user_email": "lawyer_firm_a@lawfirm.com" } }
+            ]
+          }
+        }
+      ],
+      "session_input": { "state": { "user_email": "lawyer_firm_a@lawfirm.com" } }
+    },
+    {
+      "eval_id": "gen_01_no_info",
+      "conversation": [
+        {
+          "invocation_id": "inv_1",
+          "user_content": { "parts": [{ "text": "What is the secret ingredient in Coca-Cola?" }] },
+          "intermediate_data": {
+            "tool_uses": [
+              { "name": "stage_1_retrieval", "args": { "query": "Coca-Cola secret ingredient", "user_email": "user@gmail.com" } }
+            ]
+          }
+        }
+      ],
+      "session_input": { "state": { "user_email": "user@gmail.com" } }
+    },
+    {
+      "eval_id": "gen_02_citations",
+      "conversation": [
+        {
+          "invocation_id": "inv_1",
+          "user_content": { "parts": [{ "text": "Summarize the 2024 sustainability report." }] },
+          "intermediate_data": {
+            "tool_uses": [
+              { "name": "stage_1_retrieval", "args": { "query": "2024 sustainability report summary", "user_email": "public@world.com" } }
+            ]
+          }
+        }
+      ],
+      "session_input": { "state": { "user_email": "public@world.com" } }
+    },
+    {
+      "eval_id": "saas_03_multi_turn",
+      "conversation": [
+        {
+          "invocation_id": "inv_1",
+          "user_content": { "parts": [{ "text": "I see a 403 Forbidden on Cloud Storage." }] },
+          "intermediate_data": {
+            "tool_uses": [
+              { "name": "stage_1_retrieval", "args": { "query": "Cloud Storage 403 Forbidden causes", "user_email": "dev@startup.io" } }
+            ]
+          }
+        },
+        {
+          "invocation_id": "inv_2",
+          "user_content": { "parts": [{ "text": "How do I check the IAM permissions for it?" }] },
+          "intermediate_data": {
+            "tool_uses": [
+              { "name": "stage_1_retrieval", "args": { "query": "check Cloud Storage IAM permissions", "user_email": "dev@startup.io" } }
+            ]
+          }
+        }
+      ],
+      "session_input": { "state": { "user_email": "dev@startup.io" } }
+    },
+    {
+      "eval_id": "fin_03_hallucination_check",
+      "conversation": [
+        {
+          "invocation_id": "inv_1",
+          "user_content": { "parts": [{ "text": "Did Bitcoin hit $1M in 2023 according to the research?" }] },
+          "intermediate_data": {
+            "tool_uses": [
+              { "name": "stage_1_retrieval", "args": { "query": "Bitcoin price research 2023", "user_email": "analyst@bank.com" } }
+            ]
+          }
+        }
+      ],
+      "session_input": { "state": { "user_email": "analyst@bank.com" } }
+    }
+  ]
+}

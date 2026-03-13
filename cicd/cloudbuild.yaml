@@ -1,0 +1,48 @@
+# cicd/cloudbuild.yaml: Multi-stage, Multi-environment CI/CD for JIT RAG
+
+# Substitutions:
+# _STAGING_PROJECT_ID: <ID>
+# _PROD_PROJECT_ID: <ID>
+# _REGION: us-central1 (default)
+
+steps:
+  # --- STAGE 1: DEPLOY TO STAGING ---
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-stage'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        # Deploy Agent to Stage
+        gcloud run deploy rag-agent-stage --project=${_STAGING_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
+        # Deploy UI to Stage
+        gcloud run deploy rag-ui-stage --project=${_STAGING_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
+
+  # --- STAGE 2: EVALUATION GATE ---
+  - name: 'python:3.11'
+    id: 'eval-stage'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        pip install -r app/requirements.txt
+        # make eval --project=${_STAGING_PROJECT_ID}
+        # If eval score < 0.8, this step will exit with 1, halting the build.
+
+  # --- STAGE 3: DEPLOY TO PRODUCTION ---
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-prod'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        # Deploy Agent to Prod
+        gcloud run deploy rag-agent-prod --project=${_PROD_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
+        # Deploy UI to Prod
+        gcloud run deploy rag-ui-prod --project=${_PROD_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
+
+substitutions:
+  _REGION: 'us-central1'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

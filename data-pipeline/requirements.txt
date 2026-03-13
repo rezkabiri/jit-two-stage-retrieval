@@ -1,0 +1,6 @@
+# data-pipeline/requirements.txt
+google-cloud-storage
+google-cloud-discoveryengine
+pypdf
+python-magic
+pytest
