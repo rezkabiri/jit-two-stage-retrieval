@@ -25,4 +25,5 @@ ENV PYTHONPATH=/app
 EXPOSE 8080
 
 # Command to run the agent
-CMD ["python", "-m", "google.adk.runner", "--port", "8080"]
+# Note: Using python -m to ensure the 'app' package is in the path
+CMD ["python", "-m", "app.main"]

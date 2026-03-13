@@ -12,11 +12,20 @@ resource "google_cloud_run_v2_service" "agent" {
   name     = "rag-agent-${var.env}"
   location = var.region
   project  = var.project_id
-  ingress  = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER" # Only allow traffic via LB
+  ingress  = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
 
   template {
+    timeout = "300s" # 5-minute timeout for cold starts
     containers {
       image = var.agent_image
+      
+      resources {
+        limits = {
+          cpu    = "2"
+          memory = "2048Mi"
+        }
+      }
+
       env {
         name  = "GOOGLE_CLOUD_PROJECT"
         value = var.project_id
