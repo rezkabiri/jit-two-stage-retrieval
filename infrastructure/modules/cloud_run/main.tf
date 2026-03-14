@@ -77,5 +77,22 @@ resource "google_compute_region_network_endpoint_group" "ui_neg" {
   }
 }
 
+# 4. IAM - Allow Invocation
+resource "google_cloud_run_v2_service_iam_member" "agent_invoker" {
+  project  = var.project_id
+  location = var.region
+  name     = google_cloud_run_v2_service.agent.name
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
+
+resource "google_cloud_run_v2_service_iam_member" "ui_invoker" {
+  project  = var.project_id
+  location = var.region
+  name     = google_cloud_run_v2_service.ui.name
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
+
 output "agent_neg_id" { value = google_compute_region_network_endpoint_group.agent_neg.id }
 output "ui_neg_id" { value = google_compute_region_network_endpoint_group.ui_neg.id }
