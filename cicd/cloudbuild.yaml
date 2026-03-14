@@ -40,6 +40,7 @@ steps:
       '.'
     ]
 
+  # Push Images
   - name: 'gcr.io/cloud-builders/docker'
     id: 'push-images'
     entrypoint: 'bash'
@@ -78,9 +79,11 @@ steps:
     args:
       - '-c'
       - |
+        if [ -z "${_PROD_PROJECT_ID}" ]; then
+          echo "❌ Skipping Prod: _PROD_PROJECT_ID is not set."
+          exit 0
+        fi
         echo "🚀 Promoting images to Production Project: ${_PROD_PROJECT_ID}"
-        # Authenticate Docker for the production project
-        gcloud auth configure-docker ${_REGION}-docker.pkg.dev --quiet
         
         docker tag ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} ${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/agent:${SHORT_SHA}
         docker tag ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} ${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/ui:${SHORT_SHA}
@@ -95,9 +98,8 @@ steps:
     args:
       - '-c'
       - |
-        # Deploy Agent to Prod
+        if [ -z "${_PROD_PROJECT_ID}" ]; then exit 0; fi
         gcloud run deploy rag-agent-prod --project=${_PROD_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
-        # Deploy UI to Prod
         gcloud run deploy rag-ui-prod --project=${_PROD_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
 
 substitutions:
