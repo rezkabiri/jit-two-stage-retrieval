@@ -8,6 +8,10 @@ variable "region" {
   type = string
 }
 
+variable "env" {
+  type = string
+}
+
 # 1. Enable Discovery Engine API explicitly (Safe measure)
 resource "google_project_service" "discovery_engine" {
   project = var.project_id
@@ -19,8 +23,8 @@ resource "google_project_service" "discovery_engine" {
 resource "google_discovery_engine_data_store" "rag_data_store" {
   project                     = var.project_id
   location                    = "global"
-  data_store_id               = "rag-docs"
-  display_name                = "RAG Document Store"
+  data_store_id               = "rag-docs-${var.env}"
+  display_name                = "RAG Document Store (${var.env})"
   industry_vertical           = "GENERIC"
   content_config              = "CONTENT_REQUIRED"
   solution_types              = ["SOLUTION_TYPE_SEARCH"]

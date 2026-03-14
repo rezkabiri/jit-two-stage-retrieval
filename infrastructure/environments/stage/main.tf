@@ -34,6 +34,7 @@ module "vertex_ai" {
   source     = "../../modules/vertex_ai"
   project_id = module.project.project_id
   region     = var.region
+  env        = "stage"
 }
 
 module "cloud_run" {
