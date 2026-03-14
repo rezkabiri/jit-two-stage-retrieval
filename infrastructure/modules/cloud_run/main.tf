@@ -83,7 +83,7 @@ resource "google_cloud_run_v2_service_iam_member" "agent_invoker" {
   location = var.region
   name     = google_cloud_run_v2_service.agent.name
   role     = "roles/run.invoker"
-  member   = "allUsers"
+  member   = "allAuthenticatedUsers"
 }
 
 resource "google_cloud_run_v2_service_iam_member" "ui_invoker" {
@@ -91,7 +91,7 @@ resource "google_cloud_run_v2_service_iam_member" "ui_invoker" {
   location = var.region
   name     = google_cloud_run_v2_service.ui.name
   role     = "roles/run.invoker"
-  member   = "allUsers"
+  member   = "allAuthenticatedUsers"
 }
 
 output "agent_neg_id" { value = google_compute_region_network_endpoint_group.agent_neg.id }
