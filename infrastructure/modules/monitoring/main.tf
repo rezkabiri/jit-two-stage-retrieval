@@ -56,7 +56,7 @@ resource "google_monitoring_dashboard" "rag_dashboard" {
                     aggregation = { perSeriesAligner = "ALIGN_RATE" }
                   }
                 }
-                plotType = "BAR"
+                plotType = "STACKED_BAR"
               }
             ]
           }
