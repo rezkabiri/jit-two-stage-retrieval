@@ -1,7 +1,8 @@
 # app/Dockerfile
 FROM python:3.11-slim
 
-WORKDIR /app
+# WORKDIR at root so that 'app' is a package
+WORKDIR /
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -9,21 +10,21 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY app/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Pre-download the Cross-Encoder model to avoid timeout at startup
 RUN python -c "from sentence_transformers import CrossEncoder; CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')"
 
-# Copy agent code
-COPY . .
+# Copy the entire app directory into /app
+COPY app /app
 
-# Ensure the app is in the Python path
-ENV PYTHONPATH=/app
+# Ensure /app is in the Python path
+ENV PYTHONPATH=/
 
 # Expose the port (ADK defaults to 8080)
 EXPOSE 8080
 
 # Command to run the agent
-# Note: Using python -m to ensure the 'app' package is in the path
+# Using -m app.main correctly finds the package and its submodules
 CMD ["python", "-m", "app.main"]
