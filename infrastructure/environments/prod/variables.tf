@@ -11,7 +11,22 @@ variable "region" {
   default     = "us-central1"
 }
 
-variable "agent_image" { type = string }
-variable "ui_image" { type = string }
-variable "iap_client_id" { type = string }
-variable "iap_client_secret" { type = string }
+variable "agent_image" { 
+  type    = string
+  default = "gcr.io/cloudrun/hello" # Placeholder
+}
+
+variable "ui_image" { 
+  type    = string
+  default = "gcr.io/cloudrun/hello" # Placeholder
+}
+
+variable "iap_client_id" { 
+  type    = string
+  default = "placeholder-id"
+}
+
+variable "iap_client_secret" { 
+  type    = string
+  default = "placeholder-secret"
+}
