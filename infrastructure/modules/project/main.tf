@@ -12,7 +12,7 @@ data "google_project" "project" {
 
 # 2. Artifact Registry for Container Images
 resource "google_artifact_registry_repository" "rag_repo" {
-  project       = data.google_project.project.project_id
+  project       = var.project_id
   location      = "us-central1"
   repository_id = "rag-repo"
   description   = "Docker repository for JIT RAG Agent and UI"
