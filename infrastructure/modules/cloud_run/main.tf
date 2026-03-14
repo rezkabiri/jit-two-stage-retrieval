@@ -22,7 +22,7 @@ resource "google_cloud_run_v2_service" "agent" {
       resources {
         limits = {
           cpu    = "2"
-          memory = "2048Mi"
+          memory = "4096Mi"
         }
       }
 

@@ -26,5 +26,5 @@ ENV PYTHONPATH=/
 EXPOSE 8080
 
 # Command to run the agent
-# Using -m app.main correctly finds the package and its submodules
-CMD ["python", "-m", "app.main"]
+# Using the official runner and specifying the 'app' module
+CMD ["python", "-m", "google.adk.runner", "--app", "app"]

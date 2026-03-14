@@ -19,6 +19,6 @@ FROM nginx:stable-alpine
 # Copy built assets to Nginx html folder
 COPY --from=build /app/dist /usr/share/nginx/html
 
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+# Cloud Run expects the container to listen on $PORT
+# We use a shell command to replace the default port 80 with the environment variable
+CMD sed -i "s/80/${PORT}/g" /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'
