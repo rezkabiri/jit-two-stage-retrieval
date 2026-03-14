@@ -21,6 +21,11 @@ variable "ui_image" {
   default = "gcr.io/cloudrun/hello" # Placeholder
 }
 
+variable "user_email" {
+  type        = string
+  description = "Your Google Cloud email for invoker permissions"
+}
+
 variable "iap_client_id" { 
   type    = string
   default = "placeholder-id"

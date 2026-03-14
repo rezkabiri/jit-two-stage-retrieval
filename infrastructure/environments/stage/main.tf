@@ -45,6 +45,7 @@ module "cloud_run" {
   agent_image   = var.agent_image
   ui_image      = var.ui_image
   data_store_id = module.vertex_ai.data_store_id
+  user_email    = var.user_email
 }
 
 module "load_balancer" {

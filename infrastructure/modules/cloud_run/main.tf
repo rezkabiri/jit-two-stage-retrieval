@@ -6,6 +6,10 @@ variable "env" { type = string }
 variable "agent_image" { type = string }
 variable "ui_image" { type = string }
 variable "data_store_id" { type = string }
+variable "user_email" { 
+  type        = string
+  description = "The email address of the user allowed to invoke the services"
+}
 
 # 1. ADK Agent Service
 resource "google_cloud_run_v2_service" "agent" {
@@ -83,7 +87,7 @@ resource "google_cloud_run_v2_service_iam_member" "agent_invoker" {
   location = var.region
   name     = google_cloud_run_v2_service.agent.name
   role     = "roles/run.invoker"
-  member   = "allAuthenticatedUsers"
+  member   = "user:${var.user_email}"
 }
 
 resource "google_cloud_run_v2_service_iam_member" "ui_invoker" {
@@ -91,7 +95,7 @@ resource "google_cloud_run_v2_service_iam_member" "ui_invoker" {
   location = var.region
   name     = google_cloud_run_v2_service.ui.name
   role     = "roles/run.invoker"
-  member   = "allAuthenticatedUsers"
+  member   = "user:${var.user_email}"
 }
 
 output "agent_neg_id" { value = google_compute_region_network_endpoint_group.agent_neg.id }
