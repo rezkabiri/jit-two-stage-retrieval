@@ -31,6 +31,10 @@ resource "google_cloud_run_v2_service" "agent" {
         value = var.project_id
       }
       env {
+        name  = "GOOGLE_CLOUD_LOCATION"
+        value = var.region
+      }
+      env {
         name  = "DATA_STORE_ID"
         value = var.data_store_id
       }

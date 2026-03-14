@@ -7,7 +7,9 @@ from .reranker import Reranker
 
 # Configuration
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
-LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1") # Standard Vertex AI location
+# Vertex AI Search (Discovery Engine) often uses 'global'
+# But Model execution uses the regional location
+LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
 MODEL_NAME = "gemini-3-flash-preview"
 
 # Initialize Stage 2 Reranker
