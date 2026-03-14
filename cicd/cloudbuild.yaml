@@ -18,7 +18,6 @@ steps:
     args: ['-c', 'docker pull ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:latest || true']
 
   # --- STAGE 1: BUILD AND PUSH IMAGES ---
-  # Build Agent (using root context)
   - name: 'gcr.io/cloud-builders/docker'
     id: 'build-agent'
     args: [
@@ -30,7 +29,6 @@ steps:
       '.'
     ]
 
-  # Build UI (using root context)
   - name: 'gcr.io/cloud-builders/docker'
     id: 'build-ui'
     args: [
@@ -74,21 +72,27 @@ steps:
         pip install -r app/requirements.txt
         # make eval --project=${_STAGING_PROJECT_ID}
 
-  # --- STAGE 4: DEPLOY TO PRODUCTION ---
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    id: 'deploy-prod'
+  # --- STAGE 4: PROMOTE TO PRODUCTION (TAG & PUSH) ---
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'tag-and-push-prod'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
         docker tag ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} ${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/agent:${SHORT_SHA}
         docker tag ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} ${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/ui:${SHORT_SHA}
-        # Push to Prod AR
         docker push ${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/agent:${SHORT_SHA}
         docker push ${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/ui:${SHORT_SHA}
-        
+
+  # --- STAGE 5: DEPLOY TO PRODUCTION ---
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-prod'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
         gcloud run deploy rag-agent-prod --project=${_PROD_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
-        gcloud run deploy rag-ui-prod --project=${_PROD_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-ui-prod:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
+        gcloud run deploy rag-ui-prod --project=${_PROD_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
 
 substitutions:
   _REGION: 'us-central1'
