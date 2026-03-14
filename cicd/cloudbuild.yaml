@@ -7,7 +7,6 @@
 
 steps:
   # --- STAGE 0: PREPARE CACHE ---
-  # Pull the latest image to use as cache-from (if it exists)
   - name: 'gcr.io/cloud-builders/docker'
     id: 'pull-cache-agent'
     entrypoint: 'bash'
@@ -19,27 +18,27 @@ steps:
     args: ['-c', 'docker pull ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:latest || true']
 
   # --- STAGE 1: BUILD AND PUSH IMAGES ---
-  # Build Agent (with caching)
+  # Build Agent (using root context)
   - name: 'gcr.io/cloud-builders/docker'
     id: 'build-agent'
-    dir: 'app'
     args: [
       'build', 
       '-t', '${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA}', 
       '-t', '${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:latest',
       '--cache-from', '${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:latest',
+      '-f', 'app/Dockerfile',
       '.'
     ]
 
-  # Build UI (with caching)
+  # Build UI (using root context)
   - name: 'gcr.io/cloud-builders/docker'
     id: 'build-ui'
-    dir: 'frontend'
     args: [
       'build', 
       '-t', '${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA}', 
       '-t', '${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:latest',
       '--cache-from', '${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:latest',
+      '-f', 'frontend/Dockerfile',
       '.'
     ]
 
