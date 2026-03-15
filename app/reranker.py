@@ -7,7 +7,11 @@ class Reranker:
         """
         Initializes the Cross-Encoder model.
         """
+        import os
+        cache_folder = os.getenv("SENTENCE_TRANSFORMERS_HOME")
+        print(f"📦 Loading CrossEncoder from {cache_folder if cache_folder else 'default cache'}...")
         self.model = CrossEncoder(model_name)
+        print("✅ CrossEncoder loaded successfully.")
 
     def rerank(self, query: str, documents: List[Dict[str, Any]], top_k: int = 5) -> List[Dict[str, Any]]:
         """

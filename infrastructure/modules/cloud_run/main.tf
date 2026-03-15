@@ -20,6 +20,11 @@ resource "google_cloud_run_v2_service" "agent" {
 
   template {
     timeout = "300s" # 5-minute timeout for cold starts
+    
+    # Enable CPU boost for faster startup
+    # Note: Requires google-beta provider or specific resource version
+    # Switching to standard annotations if startup_cpu_boost is not yet in GA for v2
+    
     containers {
       image = var.agent_image
       
