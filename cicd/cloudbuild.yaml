@@ -40,13 +40,14 @@ steps:
       '.'
     ]
 
-  # Push Images
+  # Push Images to STAGING
   - name: 'gcr.io/cloud-builders/docker'
-    id: 'push-images'
+    id: 'push-images-staging'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
+        set -e
         docker push ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA}
         docker push ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:latest
         docker push ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA}
@@ -59,6 +60,7 @@ steps:
     args:
       - '-c'
       - |
+        set -e
         gcloud run deploy rag-agent-stage --project=${_STAGING_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
         gcloud run deploy rag-ui-stage --project=${_STAGING_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
 
@@ -69,22 +71,28 @@ steps:
     args:
       - '-c'
       - |
+        set -e
         pip install -r app/requirements.txt
         # make eval --project=${_STAGING_PROJECT_ID}
 
   # --- STAGE 4: PROMOTE TO PRODUCTION (TAG & PUSH) ---
-  - name: 'gcr.io/cloud-builders/docker'
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'tag-and-push-prod'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
+        set -e
         if [ -z "${_PROD_PROJECT_ID}" ]; then
-          echo "❌ Skipping Prod: _PROD_PROJECT_ID is not set."
+          echo "⚠️ WARNING: _PROD_PROJECT_ID is empty. Skipping Production steps."
           exit 0
         fi
-        echo "🚀 Promoting images to Production Project: ${_PROD_PROJECT_ID}"
+        echo "🚀 PROMOTING TO PROD: ${_PROD_PROJECT_ID}"
         
+        # We need docker logic here but inside cloud-sdk image we use gcloud
+        gcloud auth configure-docker ${_REGION}-docker.pkg.dev --quiet
+        
+        # Tag and push images to the PROD Artifact Registry
         docker tag ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} ${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/agent:${SHORT_SHA}
         docker tag ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} ${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/ui:${SHORT_SHA}
         
@@ -98,7 +106,9 @@ steps:
     args:
       - '-c'
       - |
+        set -e
         if [ -z "${_PROD_PROJECT_ID}" ]; then exit 0; fi
+        echo "🚢 DEPLOYING TO PROD CLOUD RUN: ${_PROD_PROJECT_ID}"
         gcloud run deploy rag-agent-prod --project=${_PROD_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
         gcloud run deploy rag-ui-prod --project=${_PROD_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
 
