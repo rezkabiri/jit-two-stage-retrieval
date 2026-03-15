@@ -1,24 +1,21 @@
 # app/main.py
 import os
-import uvicorn
+from fastapi import FastAPI
 from google.adk import Agent, Model, App, tool
 
-print("🚀 CONTAINER BOOT START")
+print("🚀 CONTAINER STARTING")
 
-# --- 1. Tools ---
+# 1. Bare minimum Tool
 @tool
-def stage_1_retrieval(query: str, user_email: str = None) -> list:
-    return [{"title": "Mock", "snippet": "Mock"}]
+def starter_tool():
+    return "System online."
 
-@tool
-def record_feedback(message_id: str, rating: str, user_email: str = None) -> str:
-    return "OK"
-
-# --- 2. Agent ---
-PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "jit-tsr-rag-stage")
+# 2. Bare minimum Agent
+# We use a lazy initialization for the Model if possible
+PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
 LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
 
-print(f"🤖 Booting Agent in {PROJECT_ID}...")
+print(f"🤖 Config: {PROJECT_ID} in {LOCATION}")
 
 root_agent = Agent(
     name="two_stage_rag_agent",
@@ -27,17 +24,19 @@ root_agent = Agent(
         project=PROJECT_ID,
         location=LOCATION,
     ),
-    instruction="Starter agent.",
-    tools=[stage_1_retrieval, record_feedback],
+    instruction="Hello! I am ready.",
+    tools=[starter_tool],
 )
 
-# --- 3. App ---
-# Force in_memory sessions to avoid Firestore dependencies during boot
-app = App(root_agent=root_agent, name="app", session_type="in_memory")
-print("✅ ADK App ready.")
+# 3. Initialize ADK App
+# We force in_memory to avoid any database hangs
+adk_app = App(root_agent=root_agent, name="app", session_type="in_memory")
 
-if __name__ == "__main__":
-    # Explicitly listen on 8080 (Cloud Run default)
-    port = int(os.environ.get("PORT", 8080))
-    print(f"📡 Starting uvicorn on 0.0.0.0:{port}")
-    uvicorn.run("app.main:app", host="0.0.0.0", port=port, log_level="debug")
+# 4. Expose the FastAPI instance directly for Uvicorn
+app = adk_app.fastapi_app
+
+@app.get("/health")
+def health():
+    return {"status": "ok", "message": "Container is listening"}
+
+print("✅ Server initialization complete.")
