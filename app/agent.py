@@ -3,22 +3,15 @@ import os
 from google.adk import Agent, Model
 from app.tools.retriever import stage_1_retrieval
 from app.tools.feedback import record_feedback
+from app.reranker import Reranker
 
 # Configuration
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
 LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
 MODEL_NAME = "gemini-3-flash-preview"
 
-# We will lazy-load the reranker to speed up startup
-_reranker_instance = None
-
-def get_reranker():
-    global _reranker_instance
-    if _reranker_instance is None:
-        from app.reranker import Reranker
-        print("📡 Lazy-loading Reranker model...")
-        _reranker_instance = Reranker()
-    return _reranker_instance
+# Initialize Mock Reranker
+reranker = Reranker()
 
 # Stage 2: Reasoning & Reranking Agent
 root_agent = Agent(
