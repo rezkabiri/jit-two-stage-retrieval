@@ -1,22 +1,20 @@
 # app/Dockerfile
 FROM python:3.11-slim
 
-# Flat WORKDIR
-WORKDIR /app
+WORKDIR /
 
 # Install dependencies
 COPY app/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy everything into the current WORKDIR (/app)
-COPY app/ .
+# Copy the entire app directory
+COPY app/ /app/
 
-# Ensure /app is in the path
-ENV PYTHONPATH=/app
+# Ensure the root is in the path
+ENV PYTHONPATH=/
 
 # Expose port
 EXPOSE 8080
 
-# Command: Run main.py directly
-# This gives us the clearest logs and avoids any hidden ADK runner issues
-CMD ["python", "main.py"]
+# Command: Run as a module to ensure absolute imports work
+CMD ["python", "-m", "app.main"]

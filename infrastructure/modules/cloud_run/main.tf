@@ -16,7 +16,7 @@ resource "google_cloud_run_v2_service" "agent" {
   name     = "rag-agent-${var.env}"
   location = var.region
   project  = var.project_id
-  ingress  = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
+  ingress  = "INGRESS_TRAFFIC_ALL"
 
   template {
     timeout = "300s" # 5-minute timeout for cold starts
@@ -56,7 +56,7 @@ resource "google_cloud_run_v2_service" "ui" {
   name     = "rag-ui-${var.env}"
   location = var.region
   project  = var.project_id
-  ingress  = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
+  ingress  = "INGRESS_TRAFFIC_ALL"
 
   template {
     containers {
