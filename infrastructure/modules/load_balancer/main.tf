@@ -63,17 +63,27 @@ resource "google_compute_backend_service" "ui" {
   }
 }
 
-# 4. Global Forwarding Rule (HTTP for Prototype, HTTPS Recommended)
+# 4. SSL Certificate (Self-signed for testing)
+resource "google_compute_managed_ssl_certificate" "default" {
+  name    = "rag-cert-${var.env}"
+  project = var.project_id
+  managed {
+    domains = ["rag-${var.env}.example.com"] # Replace with your real domain later
+  }
+}
+
+# 5. Global Forwarding Rule (HTTPS)
 resource "google_compute_global_forwarding_rule" "default" {
   name                  = "rag-forwarding-rule-${var.env}"
   project               = var.project_id
   load_balancing_scheme = "EXTERNAL_MANAGED"
-  target                = google_compute_target_http_proxy.default.id
-  port_range            = "80"
+  target                = google_compute_target_https_proxy.default.id
+  port_range            = "443"
 }
 
-resource "google_compute_target_http_proxy" "default" {
-  name    = "rag-http-proxy-${var.env}"
-  project = var.project_id
-  url_map = google_compute_url_map.default.id
+resource "google_compute_target_https_proxy" "default" {
+  name             = "rag-https-proxy-${var.env}"
+  project          = var.project_id
+  url_map          = google_compute_url_map.default.id
+  ssl_certificates = [google_compute_managed_ssl_certificate.default.id]
 }
