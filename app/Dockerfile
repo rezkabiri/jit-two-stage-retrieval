@@ -1,27 +1,22 @@
 # app/Dockerfile
 FROM python:3.11-slim
 
-# WORKDIR at /app for a flat structure inside the container
+# Flat WORKDIR
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Python dependencies
+# Install dependencies
 COPY app/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the contents of the app directory directly into /app
+# Copy everything into the current WORKDIR (/app)
 COPY app/ .
 
-# Ensure the current directory is in the Python path
+# Ensure /app is in the path
 ENV PYTHONPATH=/app
 
-# Expose the port (ADK defaults to 8080)
+# Expose port
 EXPOSE 8080
 
-# Command to run the agent using the official ADK runner
-# We point it to the app object in main.py
-CMD ["python", "-m", "google.adk.runner", "--app", "main:app"]
+# Command: Run main.py directly
+# This gives us the clearest logs and avoids any hidden ADK runner issues
+CMD ["python", "main.py"]
