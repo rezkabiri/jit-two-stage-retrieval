@@ -61,8 +61,8 @@ steps:
       - '-c'
       - |
         set -e
-        gcloud run deploy rag-agent-stage --project=${_STAGING_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
-        gcloud run deploy rag-ui-stage --project=${_STAGING_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
+        gcloud run deploy rag-agent-stage --project=${_STAGING_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} --region=${_REGION} --platform=managed
+        gcloud run deploy rag-ui-stage --project=${_STAGING_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} --region=${_REGION} --platform=managed
 
   # --- STAGE 3: EVALUATION GATE ---
   - name: 'python:3.11'
@@ -105,8 +105,8 @@ steps:
         set -e
         if [ -z "${_PROD_PROJECT_ID}" ]; then exit 0; fi
         echo "🚢 DEPLOYING TO PROD CLOUD RUN: ${_PROD_PROJECT_ID}"
-        gcloud run deploy rag-agent-prod --project=${_PROD_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
-        gcloud run deploy rag-ui-prod --project=${_PROD_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
+        gcloud run deploy rag-agent-prod --project=${_PROD_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} --region=${_REGION} --platform=managed
+        gcloud run deploy rag-ui-prod --project=${_PROD_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} --region=${_REGION} --platform=managed
 
 substitutions:
   _REGION: 'us-central1'

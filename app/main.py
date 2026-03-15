@@ -1,42 +1,22 @@
 # app/main.py
 import os
 from fastapi import FastAPI
-from google.adk import Agent, Model, App, tool
 
-print("🚀 CONTAINER STARTING")
+print("🚀 BARE BONES STARTUP")
 
-# 1. Bare minimum Tool
-@tool
-def starter_tool():
-    return "System online."
+app = FastAPI()
 
-# 2. Bare minimum Agent
-# We use a lazy initialization for the Model if possible
-PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
-LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
-
-print(f"🤖 Config: {PROJECT_ID} in {LOCATION}")
-
-root_agent = Agent(
-    name="two_stage_rag_agent",
-    model=Model(
-        name="gemini-3-flash-preview",
-        project=PROJECT_ID,
-        location=LOCATION,
-    ),
-    instruction="Hello! I am ready.",
-    tools=[starter_tool],
-)
-
-# 3. Initialize ADK App
-# We force in_memory to avoid any database hangs
-adk_app = App(root_agent=root_agent, name="app", session_type="in_memory")
-
-# 4. Expose the FastAPI instance directly for Uvicorn
-app = adk_app.fastapi_app
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "message": "Container is listening"}
+    return {"status": "ok"}
 
-print("✅ Server initialization complete.")
+if __name__ == "__main__":
+    import uvicorn
+    # Use the PORT environment variable provided by Cloud Run
+    port = int(os.environ.get("PORT", 8080))
+    print(f"📡 Listening on port {port}")
+    uvicorn.run(app, host="0.0.0.0", port=port)
