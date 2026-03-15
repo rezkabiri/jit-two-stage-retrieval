@@ -19,17 +19,25 @@ resource "google_project_service" "discovery_engine" {
   disable_on_destroy = false
 }
 
+resource "random_id" "datastore_suffix" {
+  byte_length = 4
+}
+
 # 2. Vertex AI Search Data Store
 resource "google_discovery_engine_data_store" "rag_data_store" {
   project                     = var.project_id
   location                    = "global"
-  data_store_id               = "rag-docs-${var.env}-v4"
-  display_name                = "RAG Document Store (${var.env}) v4"
+  data_store_id               = "rag-docs-${var.env}-${random_id.datastore_suffix.hex}"
+  display_name                = "RAG Document Store (${var.env})"
   industry_vertical           = "GENERIC"
   content_config              = "CONTENT_REQUIRED"
   solution_types              = ["SOLUTION_TYPE_SEARCH"]
 
   depends_on = [google_project_service.discovery_engine]
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # 2. BigQuery Dataset for Feedback & Tracing
