@@ -61,8 +61,8 @@ steps:
       - '-c'
       - |
         set -e
-        gcloud run deploy rag-agent-stage --project=${_STAGING_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
-        gcloud run deploy rag-ui-stage --project=${_STAGING_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
+        gcloud run deploy rag-agent-stage --project=${_STAGING_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} --region=${_REGION} --platform=managed --no-allow-unauthenticated
+        gcloud run deploy rag-ui-stage --project=${_STAGING_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} --region=${_REGION} --platform=managed --no-allow-unauthenticated
 
   # --- STAGE 3: EVALUATION GATE ---
   - name: 'python:3.11'
@@ -76,7 +76,7 @@ steps:
         # make eval --project=${_STAGING_PROJECT_ID}
 
   # --- STAGE 4: PROMOTE TO PRODUCTION (TAG & PUSH) ---
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  - name: 'gcr.io/cloud-builders/docker'
     id: 'tag-and-push-prod'
     entrypoint: 'bash'
     args:
@@ -88,9 +88,6 @@ steps:
           exit 0
         fi
         echo "🚀 PROMOTING TO PROD: ${_PROD_PROJECT_ID}"
-        
-        # We need docker logic here but inside cloud-sdk image we use gcloud
-        gcloud auth configure-docker ${_REGION}-docker.pkg.dev --quiet
         
         # Tag and push images to the PROD Artifact Registry
         docker tag ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} ${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/agent:${SHORT_SHA}
@@ -109,8 +106,8 @@ steps:
         set -e
         if [ -z "${_PROD_PROJECT_ID}" ]; then exit 0; fi
         echo "🚢 DEPLOYING TO PROD CLOUD RUN: ${_PROD_PROJECT_ID}"
-        gcloud run deploy rag-agent-prod --project=${_PROD_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
-        gcloud run deploy rag-ui-prod --project=${_PROD_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} --region=${_REGION} --platform=managed --allow-unauthenticated
+        gcloud run deploy rag-agent-prod --project=${_PROD_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} --region=${_REGION} --platform=managed --no-allow-unauthenticated
+        gcloud run deploy rag-ui-prod --project=${_PROD_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} --region=${_REGION} --platform=managed --no-allow-unauthenticated
 
 substitutions:
   _REGION: 'us-central1'
