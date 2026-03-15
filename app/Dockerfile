@@ -20,7 +20,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Pre-download the Cross-Encoder model to the specific cache directory
 RUN mkdir -p /app/model_cache && \
-    python -c "from sentence_transformers import CrossEncoder; CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', cache_mirror='https://huggingface.co')"
+    python -c "from sentence_transformers import CrossEncoder; CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')"
 
 # Copy the entire app directory into /app
 COPY app /app
