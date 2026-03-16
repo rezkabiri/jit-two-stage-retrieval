@@ -16,7 +16,7 @@ resource "google_project_service" "discovery_engine" {
 resource "google_discovery_engine_data_store" "rag_data_store" {
   project                     = var.project_id
   location                    = "global"
-  data_store_id               = "rag-docs-${var.env}-v5"
+  data_store_id               = "rag-docs-${var.env}-v6"
   display_name                = "RAG Document Store (${var.env})"
   industry_vertical           = "GENERIC"
   content_config              = "CONTENT_REQUIRED"
