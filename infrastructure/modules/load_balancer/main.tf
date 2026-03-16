@@ -7,6 +7,12 @@ variable "ui_neg_id" { type = string }
 variable "iap_client_id" { type = string }
 variable "iap_client_secret" { type = string }
 
+# 0. Reserve Static IP
+resource "google_compute_global_address" "default" {
+  name    = "rag-lb-ip-${var.env}"
+  project = var.project_id
+}
+
 # 1. URL Map (Routing Logic)
 resource "google_compute_url_map" "default" {
   name            = "rag-lb-${var.env}"
@@ -79,6 +85,7 @@ resource "google_compute_global_forwarding_rule" "default" {
   load_balancing_scheme = "EXTERNAL_MANAGED"
   target                = google_compute_target_https_proxy.default.id
   port_range            = "443"
+  ip_address            = google_compute_global_address.default.address
 }
 
 resource "google_compute_target_https_proxy" "default" {
