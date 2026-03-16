@@ -26,3 +26,10 @@ Thumbs.db
 
 # Project specific
 PLAN.md
+
+# .agent
+.agent/
+
+# FDE Assessment
+fde-assessment/
+docs/FDE-rubric.md

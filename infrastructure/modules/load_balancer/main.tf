@@ -6,6 +6,7 @@ variable "agent_neg_id" { type = string }
 variable "ui_neg_id" { type = string }
 variable "iap_client_id" { type = string }
 variable "iap_client_secret" { type = string }
+variable "user_email" { type = string }
 
 # 0. Reserve Static IP
 resource "google_compute_global_address" "default" {
@@ -69,7 +70,22 @@ resource "google_compute_backend_service" "ui" {
   }
 }
 
-# 4. SSL Certificate (Self-signed for testing)
+# 4. IAM for IAP - Grant access to the backends
+resource "google_compute_iap_web_backend_service_iam_member" "agent_accessor" {
+  project            = var.project_id
+  web_backend_service = google_compute_backend_service.agent.name
+  role               = "roles/iap.httpsResourceAccessor"
+  member             = "user:${var.user_email}"
+}
+
+resource "google_compute_iap_web_backend_service_iam_member" "ui_accessor" {
+  project            = var.project_id
+  web_backend_service = google_compute_backend_service.ui.name
+  role               = "roles/iap.httpsResourceAccessor"
+  member             = "user:${var.user_email}"
+}
+
+# 5. SSL Certificate (Self-signed for testing)
 resource "google_compute_managed_ssl_certificate" "default" {
   name    = "rag-cert-${var.env}"
   project = var.project_id
@@ -78,7 +94,7 @@ resource "google_compute_managed_ssl_certificate" "default" {
   }
 }
 
-# 5. Global Forwarding Rule (HTTPS)
+# 6. Global Forwarding Rule (HTTPS)
 resource "google_compute_global_forwarding_rule" "default" {
   name                  = "rag-forwarding-rule-${var.env}"
   project               = var.project_id

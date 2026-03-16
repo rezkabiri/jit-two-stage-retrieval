@@ -16,7 +16,7 @@ resource "google_cloud_run_v2_service" "agent" {
   name     = "rag-agent-${var.env}"
   location = var.region
   project  = var.project_id
-  ingress  = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
+  ingress  = "INGRESS_TRAFFIC_INTERNAL_AND_CLOUD_LOAD_BALANCING"
 
   template {
     timeout = "300s" # 5-minute timeout for cold starts
@@ -56,7 +56,7 @@ resource "google_cloud_run_v2_service" "ui" {
   name     = "rag-ui-${var.env}"
   location = var.region
   project  = var.project_id
-  ingress  = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
+  ingress  = "INGRESS_TRAFFIC_INTERNAL_AND_CLOUD_LOAD_BALANCING"
 
   template {
     containers {
@@ -101,6 +101,13 @@ resource "google_cloud_run_v2_service_iam_member" "ui_invoker" {
   name     = google_cloud_run_v2_service.ui.name
   role     = "roles/run.invoker"
   member   = "user:${var.user_email}"
+}
+
+# 5. IAP Permissions - Allow through proxy
+resource "google_project_iam_member" "iap_accessor" {
+  project = var.project_id
+  role    = "roles/iap.httpsResourceAccessor"
+  member  = "user:${var.user_email}"
 }
 
 output "agent_neg_id" { value = google_compute_region_network_endpoint_group.agent_neg.id }
