@@ -32,6 +32,42 @@ resource "google_bigquery_dataset" "feedback_dataset" {
   location   = var.region
 }
 
+# 4. BigQuery Table for User Feedback (Thumbs up/down)
+resource "google_bigquery_table" "user_feedback" {
+  project    = var.project_id
+  dataset_id = google_bigquery_dataset.feedback_dataset.dataset_id
+  table_id   = "user_feedback"
+  deletion_protection = false
+
+  schema = <<EOF
+[
+  {"name": "message_id", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "rating", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "user_email", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "comment", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "timestamp", "type": "TIMESTAMP", "mode": "REQUIRED"}
+]
+EOF
+}
+
+# 5. BigQuery Table for Full Conversation Traces
+resource "google_bigquery_table" "conversations" {
+  project    = var.project_id
+  dataset_id = google_bigquery_dataset.feedback_dataset.dataset_id
+  table_id   = "conversations"
+  deletion_protection = false
+
+  schema = <<EOF
+[
+  {"name": "query", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "response", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "user_email", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "metadata", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "timestamp", "type": "TIMESTAMP", "mode": "REQUIRED"}
+]
+EOF
+}
+
 output "data_store_id" {
   value = google_discovery_engine_data_store.rag_data_store.data_store_id
 }

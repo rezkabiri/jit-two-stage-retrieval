@@ -2,19 +2,37 @@
 import os
 from typing import List, Optional
 from google.cloud import discoveryengine_v1beta as discoveryengine
+from google.adk import tool
 
 # Configuration (normally loaded from environment variables)
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
 LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "global")
 DATA_STORE_ID = os.getenv("DATA_STORE_ID", "rag-docs")
 
+def get_user_roles(user_email: Optional[str]) -> List[str]:
+    """
+    Mock role mapping logic. In production, this would query a database or IAM service.
+    """
+    if not user_email or user_email == "anonymous":
+        return ["public"]
+    
+    roles = ["public"]
+    if user_email.endswith("@finance.com") or user_email == "admin@bank.com":
+        roles.append("finance")
+    if user_email.endswith("@legal.com"):
+        roles.append("legal")
+    
+    return roles
+
+@tool
 def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict]:
     """
     Performs the first stage retrieval from Vertex AI Search with RBAC filtering.
+    Always call this first when information is needed from the knowledge base.
     
     Args:
         query: The user's search query.
-        user_email: The authenticated user's email for RBAC filtering.
+        user_email: The authenticated user's email for RBAC filtering (optional).
         
     Returns:
         A list of retrieved document snippets and their metadata.
@@ -32,17 +50,9 @@ def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict
         serving_config="default_config",
     )
 
-    # In a real app, we'd look up the user's role from a DB using their email.
-    # For this scaffold, we'll simulate a role filter.
-    # Vertex AI Search supports 'filter' in the SearchRequest.
-    # Example filter: 'metadata.role: ANY("public", "finance")'
-    
-    role_filter = ""
-    if user_email:
-        # Placeholder: In production, map user_email to roles
-        # roles = get_user_roles(user_email)
-        # role_filter = f'role: ANY({", ".join([f""{r}"" for r in roles])})'
-        role_filter = 'role: ANY("public")' # Default for now
+    # Resolve roles for RBAC filtering
+    roles = get_user_roles(user_email)
+    role_filter = f'role: ANY({", ".join([f"\"{r}\"" for r in roles])})'
     
     search_request = discoveryengine.SearchRequest(
         serving_config=serving_config,

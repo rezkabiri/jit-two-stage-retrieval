@@ -4,5 +4,7 @@ google-cloud-discoveryengine
 google-cloud-aiplatform
 google-cloud-storage
 google-cloud-bigquery
+fastapi
+pydantic
 uvicorn
 pytest

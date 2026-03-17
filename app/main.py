@@ -1,9 +1,9 @@
 # app/main.py
 import os
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
 from pydantic import BaseModel
 from .agent import root_agent
-from .tools.feedback import record_feedback
+from .tools.feedback import record_feedback, record_conversation
 
 print("🚀 STARTING ADK AGENT SERVICE")
 
@@ -15,33 +15,50 @@ class ChatRequest(BaseModel):
 class FeedbackRequest(BaseModel):
     messageId: str
     rating: str
+    comment: str = None
 
 @app.post("/api/chat")
-async def chat(request: ChatRequest):
+async def chat(request: ChatRequest, fast_request: Request, background_tasks: BackgroundTasks):
+    # Extract authenticated user email from IAP headers
+    user_email = fast_request.headers.get("X-Goog-Authenticated-User-Email", "anonymous")
+    if ":" in user_email:
+        user_email = user_email.split(":")[-1]
+
     try:
-        # In newer ADK/PydanticAI versions, run_sync or run is used.
-        # We will try run_sync first as it's common.
+        enriched_query = f"User: {user_email}\nQuery: {request.query}"
+        
         if hasattr(root_agent, "run_sync"):
-            result = root_agent.run_sync(request.query)
-            # Pydantic AI uses .data for the response content
+            result = root_agent.run_sync(enriched_query)
             response_text = result.data if hasattr(result, "data") else str(result)
         else:
-            # Fallback for other adk versions
-            result = root_agent(request.query)
+            result = root_agent(enriched_query)
             response_text = getattr(result, "text", str(result))
             
+        # Log the conversation in the background
+        background_tasks.add_task(
+            record_conversation, 
+            query=request.query, 
+            response=response_text, 
+            user_email=user_email
+        )
+        
         return {"response": response_text}
     except Exception as e:
         print(f"Error during chat: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/feedback")
-async def feedback(request: FeedbackRequest):
+async def feedback(request: FeedbackRequest, fast_request: Request):
+    user_email = fast_request.headers.get("X-Goog-Authenticated-User-Email", "anonymous")
+    if ":" in user_email:
+        user_email = user_email.split(":")[-1]
+        
     try:
         result = record_feedback(
             message_id=request.messageId,
             rating=request.rating,
-            user_email="anonymous" # Would be pulled from headers in real app via IAP
+            user_email=user_email,
+            comment=request.comment
         )
         return {"status": "success", "detail": result}
     except Exception as e:
