@@ -61,8 +61,15 @@ steps:
       - '-c'
       - |
         set -e
-        gcloud run deploy rag-agent-stage --project=${_STAGING_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} --region=${_REGION} --platform=managed
-        gcloud run deploy rag-ui-stage --project=${_STAGING_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} --region=${_REGION} --platform=managed
+        gcloud run deploy rag-agent-stage \
+          --project=${_STAGING_PROJECT_ID} \
+          --image=${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} \
+          --region=${_REGION} \
+          --platform=managed \
+          --set-env-vars="GOOGLE_CLOUD_PROJECT=${_STAGING_PROJECT_ID},DATA_STORE_ID=rag-docs-stage-v6" \
+          --timeout=300 \
+          --allow-unauthenticated
+
 
   # --- STAGE 3: EVALUATION GATE ---
   - name: 'python:3.11'
