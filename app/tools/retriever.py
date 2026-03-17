@@ -2,7 +2,7 @@
 import os
 from typing import List, Optional
 from google.cloud import discoveryengine_v1beta as discoveryengine
-from google.adk import tool
+from google.adk.tools import FunctionTool as tool
 
 # Configuration (normally loaded from environment variables)
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
@@ -52,7 +52,8 @@ def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict
 
     # Resolve roles for RBAC filtering
     roles = get_user_roles(user_email)
-    role_filter = f'role: ANY({", ".join([f"\"{r}\"" for r in roles])})'
+    role_list = ", ".join([f'"{r}"' for r in roles])
+    role_filter = f"role: ANY({role_list})"
     
     search_request = discoveryengine.SearchRequest(
         serving_config=serving_config,
