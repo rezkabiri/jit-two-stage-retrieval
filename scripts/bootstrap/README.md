@@ -19,12 +19,12 @@ You must run the bootstrap script for **each** project before applying Terraform
 
 **For Staging:**
 ```bash
-./scripts/bootstrap.sh <STAGING_PROJECT_ID> [REGION]
+./scripts/bootstrap/bootstrap.sh <STAGING_PROJECT_ID> [REGION]
 ```
 
 **For Production:**
 ```bash
-./scripts/bootstrap.sh <PRODUCTION_PROJECT_ID> [REGION]
+./scripts/bootstrap/bootstrap.sh <PRODUCTION_PROJECT_ID> [REGION]
 ```
 
 ### Purpose in the Pipeline
