@@ -12,8 +12,8 @@ PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
 LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
 MODEL_NAME = "gemini-3-flash-preview"
 
-# Initialize Reranker (currently mocked for stability)
-reranker = Reranker()
+# Initialize Reranker
+reranker = Reranker(project_id=PROJECT_ID, location=LOCATION)
 
 # Stage 2: Reasoning & Reranking Agent
 root_agent = Agent(
