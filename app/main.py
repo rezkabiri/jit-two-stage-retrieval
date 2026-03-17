@@ -1,14 +1,14 @@
 # app/main.py
 import os
 from fastapi import FastAPI
+from .agent import root_agent
 
-print("🚀 BARE BONES STARTUP")
+print("🚀 STARTING ADK AGENT SERVICE")
 
 app = FastAPI()
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+# Mount the ADK agent under /api to match Load Balancer routing
+root_agent.mount(app, path="/api")
 
 @app.get("/health")
 def health():
