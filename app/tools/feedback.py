@@ -3,14 +3,12 @@ import os
 import datetime
 from typing import Optional
 from google.cloud import bigquery
-from google.adk import tool
 
 # Configuration
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
 DATASET_ID = os.getenv("FEEDBACK_DATASET_ID", "agent_feedback")
 TABLE_ID = os.getenv("FEEDBACK_TABLE_ID", "user_feedback")
 
-@tool
 def record_feedback(
     message_id: str, 
     rating: str, 

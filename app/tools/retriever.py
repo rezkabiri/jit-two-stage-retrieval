@@ -2,14 +2,12 @@
 import os
 from typing import List, Optional
 from google.cloud import discoveryengine_v1beta as discoveryengine
-from google.adk import tool
 
 # Configuration (normally loaded from environment variables)
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
 LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "global")
 DATA_STORE_ID = os.getenv("DATA_STORE_ID", "rag-docs")
 
-@tool
 def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict]:
     """
     Performs the first stage retrieval from Vertex AI Search with RBAC filtering.
