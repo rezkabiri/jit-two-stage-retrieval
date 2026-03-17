@@ -66,7 +66,7 @@ steps:
           --image=${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} \
           --region=${_REGION} \
           --platform=managed \
-          --set-env-vars="GOOGLE_CLOUD_PROJECT=${_STAGING_PROJECT_ID},DATA_STORE_ID=rag-docs-stage-v6" \
+          --set-env-vars="GOOGLE_CLOUD_PROJECT=${_STAGING_PROJECT_ID},DATA_STORE_ID=rag-docs-stage-v6,GOOGLE_GENAI_USE_VERTEXAI=True" \
           --timeout=600 \
           --no-allow-unauthenticated
 
@@ -112,7 +112,13 @@ steps:
         set -e
         if [ -z "${_PROD_PROJECT_ID}" ]; then exit 0; fi
         echo "🚢 DEPLOYING TO PROD CLOUD RUN: ${_PROD_PROJECT_ID}"
-        gcloud run deploy rag-agent-prod --project=${_PROD_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} --region=${_REGION} --platform=managed --no-allow-unauthenticated
+        gcloud run deploy rag-agent-prod \
+          --project=${_PROD_PROJECT_ID} \
+          --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} \
+          --region=${_REGION} \
+          --platform=managed \
+          --set-env-vars="GOOGLE_CLOUD_PROJECT=${_PROD_PROJECT_ID},DATA_STORE_ID=rag-docs-prod,GOOGLE_GENAI_USE_VERTEXAI=True" \
+          --no-allow-unauthenticated
         gcloud run deploy rag-ui-prod --project=${_PROD_PROJECT_ID} --image=${_REGION}-docker.pkg.dev/${_PROD_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} --region=${_REGION} --platform=managed --no-allow-unauthenticated
 
 substitutions:
