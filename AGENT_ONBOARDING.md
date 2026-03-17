@@ -101,6 +101,28 @@ The bridge between Infrastructure and the Runtime Application.
 
 ---
 
+## 📜 Change Log
+
+### [March 17, 2026] - Enhanced Retrieval, Security, and Observability
+- **Refined Agentic Logic**: Implemented a formal Two-Stage Retrieval pattern. Stage 1 focuses on secure fetching via Vertex AI Search, while Stage 2 handles deep reasoning, reranking, and mandatory citations.
+- **Identity-Aware RBAC**: 
+    - Integrated IAP header extraction (`X-Goog-Authenticated-User-Email`) into the FastAPI backend.
+    - Implemented dynamic role mapping in the `retriever` tool to inject identity-based filters into Stage 1 queries.
+- **Closed-Loop Observability**:
+    - Added asynchronous BigQuery logging for both user feedback (thumbs up/down) and full conversation traces.
+    - Provisioned the required BigQuery schemas (`user_feedback` and `conversations` tables) via Terraform.
+- **Developer Experience**: 
+    - Stabilized backend dependencies (`fastapi`, `pydantic`).
+    - Standardized tool registration with ADK decorators.
+
+### [March 17, 2026 - Update 2] - Deployment Stability & Import Fixes
+- **Absolute Imports**: Converted relative imports to absolute (`app.agent` etc.) to ensure robust module resolution in containerized environments.
+- **Dependency Optimization**: Upgraded `uvicorn` to `uvicorn[standard]` to include high-performance event loops (`uvloop`) and HTTP parsers (`httptools`), fixing a common source of Cloud Run startup failures.
+- **Dockerfile Refactor**: Simplified the `CMD` to use the Python module runner (`python3 -m app.main`), which ensures correct entry-point execution and proper signal handling via the built-in `uvicorn.run`.
+- **RBAC Refinement**: Finalized the mock role mapper to handle `anonymous` identities gracefully in the retrieval layer.
+
+---
+
 ## 🧠 Guidance for Future Agents (How to improve/debug)
 - **Adding a new Tool**: Place it in `app/tools/`, define it with the `@tool` decorator, and register it in `app/agent.py`.
 - **Modifying UI**: React components are in `frontend/src/components`. Use Tailwind for styling if requested.

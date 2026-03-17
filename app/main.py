@@ -2,8 +2,8 @@
 import os
 from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
 from pydantic import BaseModel
-from .agent import root_agent
-from .tools.feedback import record_feedback, record_conversation
+from app.agent import root_agent
+from app.tools.feedback import record_feedback, record_conversation
 
 print("🚀 STARTING ADK AGENT SERVICE")
 

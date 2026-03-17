@@ -1,9 +1,9 @@
 # app/agent.py
 import os
 from google.adk import Agent
-from .tools.retriever import stage_1_retrieval
-from .tools.feedback import record_feedback
-from .reranker import Reranker
+from app.tools.retriever import stage_1_retrieval
+from app.tools.feedback import record_feedback
+from app.reranker import Reranker
 
 print("🚀 Initializing Agent module...")
 

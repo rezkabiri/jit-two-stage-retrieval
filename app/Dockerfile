@@ -7,14 +7,14 @@ WORKDIR /
 COPY app/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire app directory
+# Copy the entire repo's app directory to /app
 COPY app/ /app/
 
-# Ensure the root is in the path
+# Ensure the parent directory is in the path so "import app.main" works
 ENV PYTHONPATH=/
 
-# Expose port
+# Expose port (metadata only)
 EXPOSE 8080
 
-# Command: Run uvicorn directly using the $PORT env var
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080} --log-level debug"]
+# Command: Run the app as a module
+CMD ["python3", "-m", "app.main"]

@@ -6,5 +6,5 @@ google-cloud-storage
 google-cloud-bigquery
 fastapi
 pydantic
-uvicorn
+uvicorn[standard]
 pytest
