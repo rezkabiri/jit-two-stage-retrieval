@@ -1,6 +1,6 @@
 # app/agent.py
 import os
-from google.adk import Agent, Model
+from google.adk import Agent
 from .tools.retriever import stage_1_retrieval
 from .tools.feedback import record_feedback
 from .reranker import Reranker
@@ -18,11 +18,11 @@ reranker = Reranker()
 # Stage 2: Reasoning & Reranking Agent
 root_agent = Agent(
     name="two_stage_rag_agent",
-    model=Model(
-        name=MODEL_NAME,
-        project=PROJECT_ID,
-        location=LOCATION,
-    ),
+    model={
+        "name": MODEL_NAME,
+        "project": PROJECT_ID,
+        "location": LOCATION,
+    },
     instruction="""
     You are a high-fidelity intelligence agent specializing in secure information retrieval.
     You operate in a two-stage retrieval process:
