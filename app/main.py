@@ -2,8 +2,12 @@
 import os
 import sys
 import logging
+import hashlib
 from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
 from pydantic import BaseModel
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.genai import types
 from app.agent import root_agent
 from app.tools.feedback import record_feedback, record_conversation
 
@@ -14,6 +18,10 @@ logger = logging.getLogger(__name__)
 logger.info("🚀 STARTING AGENT SERVICE")
 
 app = FastAPI()
+
+# Initialize ADK Runner and Session Service
+session_service = InMemorySessionService()
+runner = Runner(agent=root_agent, app_name="rag-app", session_service=session_service, auto_create_session=True)
 
 class ChatRequest(BaseModel):
     query: str
@@ -30,16 +38,17 @@ async def chat(request: ChatRequest, fast_request: Request, background_tasks: Ba
         user_email = user_email.split(":")[-1]
 
     try:
-        enriched_query = f"User: {user_email}\nQuery: {request.query}"
+        # Generate a stable session ID for the user
+        session_id = hashlib.md5(user_email.encode()).hexdigest()
         
-        # Pydantic AI/ADK Agents typically use run_sync or run
-        if hasattr(root_agent, "run_sync"):
-            result = root_agent.run_sync(enriched_query)
-            response_text = result.data if hasattr(result, "data") else str(result)
-        else:
-            # Fallback for older versions
-            result = await root_agent.run(enriched_query) if hasattr(root_agent, "run") else root_agent(enriched_query)
-            response_text = getattr(result, "data", str(result))
+        response_text = ""
+        async for event in runner.run_async(
+            user_id=user_email,
+            session_id=session_id,
+            new_message=types.Content(role="user", parts=[types.Part.from_text(text=request.query)])
+        ):
+            if event.is_final_response():
+                response_text = event.content.parts[0].text
             
         background_tasks.add_task(
             record_conversation, 
