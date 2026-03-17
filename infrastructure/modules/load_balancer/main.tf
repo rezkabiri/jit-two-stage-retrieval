@@ -103,7 +103,7 @@ resource "google_compute_global_forwarding_rule" "default" {
   load_balancing_scheme = "EXTERNAL_MANAGED"
   target                = google_compute_target_https_proxy.default.id
   port_range            = "443"
-  ip_address            = google_compute_global_address.default.address
+  ip_address            = google_compute_global_address.default.id
 }
 
 resource "google_compute_target_https_proxy" "default" {

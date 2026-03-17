@@ -11,6 +11,11 @@ variable "user_email" {
   description = "The email address of the user allowed to invoke the services"
 }
 
+# 0. Fetch Project Info (to get project number for IAP Service Agent)
+data "google_project" "project" {
+  project_id = var.project_id
+}
+
 # 1. ADK Agent Service
 resource "google_cloud_run_v2_service" "agent" {
   name     = "rag-agent-${var.env}"
@@ -101,6 +106,23 @@ resource "google_cloud_run_v2_service_iam_member" "ui_invoker" {
   name     = google_cloud_run_v2_service.ui.name
   role     = "roles/run.invoker"
   member   = "user:${var.user_email}"
+}
+
+# 4a. IAM - Allow IAP to invoke Cloud Run
+resource "google_cloud_run_v2_service_iam_member" "iap_invoker_agent" {
+  project  = var.project_id
+  location = var.region
+  name     = google_cloud_run_v2_service.agent.name
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:service-${data.google_project.project.number}@gcp-sa-iap.iam.gserviceaccount.com"
+}
+
+resource "google_cloud_run_v2_service_iam_member" "iap_invoker_ui" {
+  project  = var.project_id
+  location = var.region
+  name     = google_cloud_run_v2_service.ui.name
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:service-${data.google_project.project.number}@gcp-sa-iap.iam.gserviceaccount.com"
 }
 
 # 5. IAP Permissions - Allow through proxy
