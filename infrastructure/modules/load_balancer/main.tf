@@ -41,6 +41,7 @@ resource "google_compute_backend_service" "agent" {
   name                  = "agent-backend-${var.env}"
   project               = var.project_id
   load_balancing_scheme = "EXTERNAL_MANAGED"
+  protocol              = "HTTP"
 
   backend {
     group = var.agent_neg_id
@@ -58,6 +59,7 @@ resource "google_compute_backend_service" "ui" {
   name                  = "ui-backend-${var.env}"
   project               = var.project_id
   load_balancing_scheme = "EXTERNAL_MANAGED"
+  protocol              = "HTTP"
 
   backend {
     group = var.ui_neg_id
