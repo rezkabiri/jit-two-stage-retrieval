@@ -67,7 +67,7 @@ steps:
           --region=${_REGION} \
           --platform=managed \
           --set-env-vars="GOOGLE_CLOUD_PROJECT=${_STAGING_PROJECT_ID},DATA_STORE_ID=rag-docs-stage-v6" \
-          --timeout=300 \
+          --timeout=600 \
           --no-allow-unauthenticated
 
 

@@ -16,5 +16,5 @@ ENV PYTHONPATH=/
 # Expose port (metadata only)
 EXPOSE 8080
 
-# Command: Run the app as a module
-CMD ["python3", "-m", "app.main"]
+# Command: Use uvicorn directly to ensure the port is correctly handled and the application starts reliably.
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
