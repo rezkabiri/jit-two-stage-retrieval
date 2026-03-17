@@ -18,11 +18,7 @@ reranker = Reranker()
 # Stage 2: Reasoning & Reranking Agent
 root_agent = Agent(
     name="two_stage_rag_agent",
-    model={
-        "name": MODEL_NAME,
-        "project": PROJECT_ID,
-        "location": LOCATION,
-    },
+    model=MODEL_NAME,
     instruction="""
     You are a high-fidelity intelligence agent specializing in secure information retrieval.
     You operate in a two-stage retrieval process:
