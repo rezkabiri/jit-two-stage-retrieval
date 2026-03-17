@@ -2,12 +2,17 @@
 import os
 from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
 from pydantic import BaseModel
+from google.adk import App
 from app.agent import root_agent
 from app.tools.feedback import record_feedback, record_conversation
 
 print("🚀 STARTING ADK AGENT SERVICE")
 
-app = FastAPI()
+# Initialize ADK App to properly wrap the agent
+adk_app = App(root_agent=root_agent, name="two_stage_rag_app", session_type="in_memory")
+
+# Extract the FastAPI instance from the ADK App
+app = adk_app.fastapi_app
 
 class ChatRequest(BaseModel):
     query: str
@@ -27,12 +32,9 @@ async def chat(request: ChatRequest, fast_request: Request, background_tasks: Ba
     try:
         enriched_query = f"User: {user_email}\nQuery: {request.query}"
         
-        if hasattr(root_agent, "run_sync"):
-            result = root_agent.run_sync(enriched_query)
-            response_text = result.data if hasattr(result, "data") else str(result)
-        else:
-            result = root_agent(enriched_query)
-            response_text = getattr(result, "text", str(result))
+        # Use the adk_app to run the query, which handles context and session properly
+        result = await adk_app.run(enriched_query)
+        response_text = result.data if hasattr(result, "data") else str(result)
             
         # Log the conversation in the background
         background_tasks.add_task(
@@ -67,7 +69,7 @@ async def feedback(request: FeedbackRequest, fast_request: Request):
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "message": "ADK Agent is online"}
 
 if __name__ == "__main__":
     import uvicorn
