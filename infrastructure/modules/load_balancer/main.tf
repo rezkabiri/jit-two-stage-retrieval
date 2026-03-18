@@ -87,13 +87,21 @@ resource "google_iap_web_backend_service_iam_member" "ui_accessor" {
   member             = "user:${var.user_email}"
 }
 
-# 5. SSL Certificate (Self-signed for testing)
+# 5. SSL Certificate (Managed + Self-signed fallback)
 resource "google_compute_managed_ssl_certificate" "default" {
   name    = "rag-cert-${var.env}"
   project = var.project_id
   managed {
-    domains = ["rag-${var.env}.example.com"] # Replace with your real domain later
+    domains = ["rag-${var.env}.example.com"] 
   }
+}
+
+# Added a self-signed cert for local testing bypass
+resource "google_compute_ssl_certificate" "self_signed" {
+  name        = "rag-self-signed-${var.env}"
+  project     = var.project_id
+  private_key = file("${path.module}/self-signed.key")
+  certificate = file("${path.module}/self-signed.crt")
 }
 
 # 6. Global Forwarding Rule (HTTPS)
@@ -110,5 +118,13 @@ resource "google_compute_target_https_proxy" "default" {
   name             = "rag-https-proxy-${var.env}"
   project          = var.project_id
   url_map          = google_compute_url_map.default.id
-  ssl_certificates = [google_compute_managed_ssl_certificate.default.id]
+  # Use BOTH - the browser will pick one. Self-signed allows the IP check to pass.
+  ssl_certificates = [
+    google_compute_managed_ssl_certificate.default.id,
+    google_compute_ssl_certificate.self_signed.id
+  ]
+}
+
+output "load_balancer_ip" {
+  value = google_compute_global_address.default.address
 }

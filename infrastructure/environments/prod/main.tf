@@ -80,3 +80,4 @@ module "ingestion" {
 
 output "project_id" { value = module.project.project_id }
 output "ingestion_bucket" { value = module.storage.ingestion_bucket_name }
+output "load_balancer_ip" { value = module.load_balancer.load_balancer_ip }
