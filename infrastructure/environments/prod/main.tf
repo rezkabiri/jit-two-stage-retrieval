@@ -60,12 +60,22 @@ module "load_balancer" {
   ui_neg_id         = module.cloud_run.ui_neg_id
   iap_client_id     = var.iap_client_id
   iap_client_secret = var.iap_client_secret
+  user_email        = var.user_email
 }
 
 module "monitoring" {
   source     = "../../modules/monitoring"
   project_id = module.project.project_id
   env        = "prod"
+}
+
+module "ingestion" {
+  source                = "../../modules/ingestion"
+  project_id            = module.project.project_id
+  region                = var.region
+  env                   = "prod"
+  ingestion_bucket_name = module.storage.ingestion_bucket_name
+  data_store_id         = module.vertex_ai.data_store_id
 }
 
 output "project_id" { value = module.project.project_id }

@@ -16,12 +16,19 @@ data "google_project" "project" {
   project_id = var.project_id
 }
 
+# 0a. Ensure IAP Service Identity exists
+resource "google_project_service_identity" "iap_identity" {
+  provider = google-beta
+  project  = var.project_id
+  service  = "iap.googleapis.com"
+}
+
 # 1. ADK Agent Service
 resource "google_cloud_run_v2_service" "agent" {
   name     = "rag-agent-${var.env}"
   location = var.region
   project  = var.project_id
-  ingress  = "INGRESS_TRAFFIC_INTERNAL_AND_CLOUD_LOAD_BALANCING"
+  ingress  = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
 
   template {
     timeout = "300s" # 5-minute timeout for cold starts
@@ -61,7 +68,7 @@ resource "google_cloud_run_v2_service" "ui" {
   name     = "rag-ui-${var.env}"
   location = var.region
   project  = var.project_id
-  ingress  = "INGRESS_TRAFFIC_INTERNAL_AND_CLOUD_LOAD_BALANCING"
+  ingress  = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
 
   template {
     containers {
@@ -114,7 +121,7 @@ resource "google_cloud_run_v2_service_iam_member" "iap_invoker_agent" {
   location = var.region
   name     = google_cloud_run_v2_service.agent.name
   role     = "roles/run.invoker"
-  member   = "serviceAccount:service-${data.google_project.project.number}@gcp-sa-iap.iam.gserviceaccount.com"
+  member   = "serviceAccount:${google_project_service_identity.iap_identity.email}"
 }
 
 resource "google_cloud_run_v2_service_iam_member" "iap_invoker_ui" {
@@ -122,7 +129,7 @@ resource "google_cloud_run_v2_service_iam_member" "iap_invoker_ui" {
   location = var.region
   name     = google_cloud_run_v2_service.ui.name
   role     = "roles/run.invoker"
-  member   = "serviceAccount:service-${data.google_project.project.number}@gcp-sa-iap.iam.gserviceaccount.com"
+  member   = "serviceAccount:${google_project_service_identity.iap_identity.email}"
 }
 
 # 5. IAP Permissions - Allow through proxy

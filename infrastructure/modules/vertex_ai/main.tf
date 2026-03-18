@@ -11,12 +11,20 @@ resource "google_project_service" "discovery_engine" {
   disable_on_destroy = false
 }
 
+resource "random_id" "datastore_suffix" {
+  byte_length = 4
+  keepers = {
+    # Force a new ID if we are stuck in a deletion loop
+    version = "v8" 
+  }
+}
+
 # 2. Vertex AI Search Data Store
-# Using a fixed ID per environment to stop the random suffix recreation loop.
+# Using a random suffix to avoid "being deleted" conflicts.
 resource "google_discovery_engine_data_store" "rag_data_store" {
   project                     = var.project_id
   location                    = "global"
-  data_store_id               = "rag-docs-${var.env}-v6"
+  data_store_id               = "rag-docs-${var.env}-${random_id.datastore_suffix.hex}"
   display_name                = "RAG Document Store (${var.env})"
   industry_vertical           = "GENERIC"
   content_config              = "CONTENT_REQUIRED"

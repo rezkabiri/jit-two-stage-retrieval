@@ -73,14 +73,14 @@ resource "google_compute_backend_service" "ui" {
 }
 
 # 4. IAM for IAP - Grant access to the backends
-resource "google_compute_iap_web_backend_service_iam_member" "agent_accessor" {
+resource "google_iap_web_backend_service_iam_member" "agent_accessor" {
   project            = var.project_id
   web_backend_service = google_compute_backend_service.agent.name
   role               = "roles/iap.httpsResourceAccessor"
   member             = "user:${var.user_email}"
 }
 
-resource "google_compute_iap_web_backend_service_iam_member" "ui_accessor" {
+resource "google_iap_web_backend_service_iam_member" "ui_accessor" {
   project            = var.project_id
   web_backend_service = google_compute_backend_service.ui.name
   role               = "roles/iap.httpsResourceAccessor"

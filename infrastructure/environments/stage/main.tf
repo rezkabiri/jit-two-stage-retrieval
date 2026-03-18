@@ -69,5 +69,14 @@ module "monitoring" {
   env        = "stage"
 }
 
+module "ingestion" {
+  source                = "../../modules/ingestion"
+  project_id            = module.project.project_id
+  region                = var.region
+  env                   = "stage"
+  ingestion_bucket_name = module.storage.ingestion_bucket_name
+  data_store_id         = module.vertex_ai.data_store_id
+}
+
 output "project_id" { value = module.project.project_id }
 output "ingestion_bucket" { value = module.storage.ingestion_bucket_name }
