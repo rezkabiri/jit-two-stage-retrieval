@@ -3,15 +3,11 @@ import os
 from typing import List, Optional
 from google.cloud import discoveryengine_v1beta as discoveryengine
 from google.adk.tools import FunctionTool as tool
-from app.reranker import Reranker
 
 # Configuration (normally loaded from environment variables)
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
 LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "global")
 DATA_STORE_ID = os.getenv("DATA_STORE_ID", "rag-docs")
-
-# Initialize Reranker for the tool to use
-_reranker = Reranker(project_id=PROJECT_ID, location=LOCATION)
 
 def get_user_roles(user_email: Optional[str]) -> List[str]:
     """
@@ -31,8 +27,7 @@ def get_user_roles(user_email: Optional[str]) -> List[str]:
 @tool
 def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict]:
     """
-    Performs the first stage retrieval from Vertex AI Search with RBAC filtering,
-    followed by a second-stage reranking using a cross-encoder model.
+    Performs the first stage retrieval from Vertex AI Search with RBAC filtering.
     Always call this first when information is needed from the knowledge base.
     
     Args:
@@ -60,11 +55,11 @@ def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict
     role_list = ", ".join([f'"{r}"' for r in roles])
     role_filter = f"role: ANY({role_list})"
     
-    # Stage 1: Initial Retrieval (Page Size: 20 for reranking)
+    # Stage 1: Initial Retrieval
     search_request = discoveryengine.SearchRequest(
         serving_config=serving_config,
         query=query,
-        page_size=20, 
+        page_size=10, 
         filter=role_filter,
     )
 
@@ -81,11 +76,6 @@ def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict
                 "link": derived.get("link", ""),
                 "metadata": dict(doc.struct_data) if doc.struct_data else {}
             })
-        
-        # Stage 2: Reranking (Cross-Encoder)
-        if results:
-            print(f"🔄 Reranking {len(results)} results for query: {query}")
-            results = _reranker.rerank(query, results, top_k=5)
             
         return results
     except Exception as e:

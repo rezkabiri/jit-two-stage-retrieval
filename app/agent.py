@@ -1,50 +1,55 @@
 # app/agent.py
 import os
-from google.adk import Agent
+from google.adk.agents import Agent, SequentialAgent
 from app.tools.retriever import stage_1_retrieval
-from app.tools.feedback import record_feedback
-from app.reranker import Reranker
+from app.reranker import rerank_documents
 
 print("🚀 Initializing Agent module...")
 
 # Configuration
-PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
-LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
 MODEL_NAME = "gemini-3-flash-preview"
 
-# Initialize Reranker
-reranker = Reranker(project_id=PROJECT_ID, location=LOCATION)
+def create_retriever_agent():
+    return Agent(
+        name="retriever_agent",
+        model=MODEL_NAME,
+        instruction="""
+        You are the first stage of a two-stage RAG pipeline.
+        Your goal is to retrieve relevant documents from the knowledge base.
+        
+        1. Use the `stage_1_retrieval` tool to fetch raw documents.
+        2. Pass the authenticated user's email if available for RBAC filtering.
+        3. If you find documents, pass them as a structured list to the next stage.
+        4. If no results are found, state that clearly.
+        """,
+        tools=[stage_1_retrieval],
+    )
 
-# Stage 2: Reasoning & Reranking Agent
-root_agent = Agent(
-    name="two_stage_rag_agent",
-    model=MODEL_NAME,
-    instruction="""
-    You are a high-fidelity intelligence agent specializing in secure information retrieval using a two-stage process.
-    
-    ### Your Process:
-    1.  **Stage 1: Secure Retrieval**
-        - Always use the `stage_1_retrieval` tool for informational queries.
-        - Pass the authenticated user's email if available for RBAC filtering.
-        - If the search returns no results, do not attempt to guess or hallucinate.
-    
-    2.  **Stage 2: Reasoning and Reranking**
-        - Thoroughly analyze the retrieved snippets for relevancy.
-        - You must reason over the retrieved context to answer the user's question precisely.
-        - Prioritize grounding: All answers must be directly supported by the retrieved context.
-        - If multiple documents provide conflicting information, highlight the discrepancy.
-    
-    ### Output Format:
-    - Maintain a concise, professional tone.
-    - **Citations are Mandatory**: Include titles and links (if available) for all information retrieved.
-    - If no relevant context is found, clearly state that you do not have the information.
-    - Use markdown for clarity (headers, lists, tables).
-    
-    ### Security:
-    - Never reveal internal metadata such as document IDs or specific RBAC tags.
-    - Respect identity-based access; never attempt to bypass filtering logic.
-    """,
-    tools=[stage_1_retrieval],
+def create_reranker_agent():
+    return Agent(
+        name="reranker_agent",
+        model=MODEL_NAME,
+        instruction="""
+        You are the second stage of a two-stage RAG pipeline.
+        Your goal is to rerank the documents retrieved in the previous stage for maximum relevance.
+        
+        1. Use the `rerank_documents` tool on the documents retrieved by the retriever_agent.
+        2. Analyze the reranked snippets and provide a precise, grounded answer to the user's question.
+        3. Prioritize information from the highest-scoring documents.
+        4. Include mandatory citations (titles and links) for all information used.
+        5. Use markdown for clarity.
+        """,
+        tools=[rerank_documents],
+    )
+
+# Orchestrate the journey using SequentialAgent
+root_agent = SequentialAgent(
+    name="two_stage_rag_workflow",
+    sub_agents=[
+        create_retriever_agent(),
+        create_reranker_agent()
+    ],
+    description="A secure two-stage retrieval workflow that uses semantic reranking."
 )
 
-print("✅ Agent module initialized.")
+print("✅ Agent module initialized with SequentialAgent workflow.")

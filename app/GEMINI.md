@@ -27,3 +27,4 @@ This agent is built using the Google Agent Development Kit (ADK) and follows the
 -   **Model**: `gemini-3-flash-preview`
 -   **Location**: `us-central1` (for Vertex AI Search data stores)
 -   **Stage 1 Tool**: `stage_1_retrieval`
+-   **Stage 2 Tool**: `rerank_documents` (Vertex AI Ranking API)

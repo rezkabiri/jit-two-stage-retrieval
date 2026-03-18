@@ -37,8 +37,13 @@ Refer to `docs/industry_use_cases_rag.md` for detailed scenarios in:
 
 ## Tools Required
 *   **`stage_1_retrieval`**: A tool for the ADK agent to query Vertex AI Search with RBAC filters.
+*   **`rerank_documents`**: A tool utilizing the **Vertex AI Ranking API** to apply semantic cross-encoder scores to retrieved snippets.
 *   **`record_feedback`**: A tool to asynchronously log user feedback to BigQuery.
-*   **`cross_encoder_reranker`**: Internal logic to score and re-order Stage 1 results.
+
+## Workflow Orchestration
+The system utilizes a **SequentialAgent** to manage the user journey:
+1.  **Retriever Agent**: Invokes `stage_1_retrieval` to get authorized document candidates.
+2.  **Reranker Agent**: Receives candidates, invokes `rerank_documents`, and generates the final grounded response.
 
 ## Constraints & Safety Rules
 *   **Data Leakage**: The agent MUST NOT access or summarize documents if the RBAC metadata filter returns zero results or if the user identity is missing.

@@ -23,8 +23,10 @@ The system follows a classic decoupled architecture optimized for Google Cloud:
 
 ### 1. `/app` (Application Layer - Agent)
 This is the core "intelligence" of the system.
-- `agent.py`: Defines the ADK `root_agent`. Orchestrates the two-stage process.
+- `agent.py`: Defines the ADK `root_agent` using a `SequentialAgent` workflow. It orchestrates the retrieval and reranking stages across specialized sub-agents.
+- `reranker.py`: Implements the `rerank_documents` tool using the Vertex AI Ranking API (Cross-Encoder) and the `Reranker` utility class.
 - `tools/retriever.py`: The `stage_1_retrieval` tool. Connects to Vertex AI Search and applies role-based filters (`user_email`).
+- `main.py`: FastAPI entry point. Uses ADK `Runner` and `InMemorySessionService` to manage agent execution and state.
 - `GEMINI.md`: Strict technical mandates for the agent (security, grounding, citations).
 - `Dockerfile`: Containerizes the agent for Cloud Run deployment.
 
@@ -93,33 +95,14 @@ The bridge between Infrastructure and the Runtime Application.
 - **Staging**: `make deploy-stage` triggers the Cloud Build pipeline.
 - **Production**: Follow the production promote step in the Cloud Build UI after evaluation passes.
 
----
-
-## 🛡️ Security Implementation
-- **Zero-Trust**: All traffic is guarded by Google Cloud IAP.
-- **RBAC**: The agent extracts the user's email from the session headers and passes it to the `retriever` tool. The tool uses this to inject a `filter` query into the Vertex AI Search request, ensuring users only see documents they are authorized to access.
-
----
-
-## 📜 Change Log
-
-### [March 17, 2026] - Enhanced Retrieval, Security, and Observability
-- **Refined Agentic Logic**: Implemented a formal Two-Stage Retrieval pattern. Stage 1 focuses on secure fetching via Vertex AI Search, while Stage 2 handles deep reasoning, reranking, and mandatory citations.
-- **Identity-Aware RBAC**: 
-    - Integrated IAP header extraction (`X-Goog-Authenticated-User-Email`) into the FastAPI backend.
-    - Implemented dynamic role mapping in the `retriever` tool to inject identity-based filters into Stage 1 queries.
-- **Closed-Loop Observability**:
-    - Added asynchronous BigQuery logging for both user feedback (thumbs up/down) and full conversation traces.
-    - Provisioned the required BigQuery schemas (`user_feedback` and `conversations` tables) via Terraform.
-- **Developer Experience**: 
-    - Stabilized backend dependencies (`fastapi`, `pydantic`).
-    - Standardized tool registration with ADK decorators.
-
-### [March 17, 2026 - Update 2] - Deployment Stability & Import Fixes
-- **Absolute Imports**: Converted relative imports to absolute (`app.agent` etc.) to ensure robust module resolution in containerized environments.
-- **Dependency Optimization**: Upgraded `uvicorn` to `uvicorn[standard]` to include high-performance event loops (`uvloop`) and HTTP parsers (`httptools`), fixing a common source of Cloud Run startup failures.
-- **Dockerfile Refactor**: Simplified the `CMD` to use the Python module runner (`python3 -m app.main`), which ensures correct entry-point execution and proper signal handling via the built-in `uvicorn.run`.
-- **RBAC Refinement**: Finalized the mock role mapper to handle `anonymous` identities gracefully in the retrieval layer.
+### [March 17, 2026 - Update 3] - Workflow Orchestration & Semantic Reranking
+- **SequentialAgent Implementation**: Refactored the core agent logic into a structured `SequentialAgent` workflow. This separates the journey into two distinct stages: `retriever_agent` (fetching raw candidates) and `reranker_agent` (semantic scoring and response generation).
+- **Production-Grade Reranker**: Replaced the mock reranker with a functional implementation using the **Vertex AI Ranking API** (`semantic-ranker-52b`).
+- **Standardized ADK Execution**: Migrated the FastAPI backend to use the ADK `Runner` and `InMemorySessionService` for programmatic agent execution, ensuring compatibility with the latest SDK patterns.
+- **CI/CD Stabilization**: 
+    - Added `GOOGLE_GENAI_USE_VERTEXAI=True` to Cloud Run deployments to enable IAM-based authentication for Vertex AI services.
+    - Fixed f-string syntax compatibility for Python 3.11 in the container runtime.
+- **Developer Utility**: Reorganized the `scripts/` directory and introduced `setup_local.sh` for one-command local environment preparation.
 
 ---
 

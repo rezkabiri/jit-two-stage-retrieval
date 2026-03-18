@@ -26,10 +26,19 @@ A high-performance, production-grade Agentic RAG solution on Google Cloud Platfo
 ### 1. Bootstrap the Environment
 Before running Terraform, initialize each GCP project:
 ```bash
-./scripts/bootstrap.sh <PROJECT_ID> [REGION]
+./scripts/bootstrap/bootstrap.sh <PROJECT_ID> [REGION]
 ```
 
-### 2. Provision Infrastructure
+### 2. Local Development Setup
+Quickly spin up the backend and frontend for local testing:
+```bash
+# Setup dependencies and proxy
+./scripts/local-dev/setup_local.sh
+
+# Follow the instructions in scripts/local-dev/README.md to start the services
+```
+
+### 3. Provision Infrastructure
 Deploy the staging environment:
 ```bash
 cd infrastructure/environments/stage

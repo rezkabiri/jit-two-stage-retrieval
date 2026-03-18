@@ -1,6 +1,8 @@
 # app/reranker.py
+import os
 from typing import List, Dict, Any
 from google.cloud import discoveryengine_v1beta as discoveryengine
+from google.adk.tools import FunctionTool as tool
 
 class Reranker:
     def __init__(self, project_id: str, location: str = "global"):
@@ -63,3 +65,24 @@ class Reranker:
         except Exception as e:
             print(f"❌ Reranking failed: {e}. Falling back to stage 1 results.")
             return documents[:top_k]
+
+# Global instance for tool use
+PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
+LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+_reranker_instance = Reranker(project_id=PROJECT_ID, location=LOCATION)
+
+@tool
+def rerank_documents(query: str, documents: List[Dict[str, Any]], top_k: int = 5) -> List[Dict[str, Any]]:
+    """
+    Reranks a list of retrieved document snippets using a semantic cross-encoder model.
+    Use this to improve the relevance of results after an initial retrieval step.
+    
+    Args:
+        query: The original search query.
+        documents: A list of documents retrieved in Stage 1.
+        top_k: The number of top reranked results to return.
+        
+    Returns:
+        A reranked list of documents with semantic scores.
+    """
+    return _reranker_instance.rerank(query, documents, top_k)
