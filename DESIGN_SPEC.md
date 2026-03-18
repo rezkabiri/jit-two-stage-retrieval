@@ -3,6 +3,29 @@
 ## Overview
 This project implements a high-scale, production-grade Agentic RAG (Retrieval-Augmented Generation) solution on Google Cloud Platform. It utilizes a **two-stage retrieval architecture** to balance performance, cost, and extreme precision.
 
+```mermaid
+graph TD
+    User([User]) --> IAP[Identity-Aware Proxy]
+    IAP --> Backend[Cloud Run Backend]
+    
+    subgraph "Stage 1: Retrieval"
+    Backend --> RetAgent[Retriever Agent]
+    RetAgent --> Stage1Tool[stage_1_retrieval]
+    Stage1Tool --> VAIS[Vertex AI Search]
+    VAIS -- "RBAC Metadata Filtering" --> Docs[(Document Corpus)]
+    end
+    
+    subgraph "Stage 2: Reasoning & Reranking"
+    RetAgent -- "Initial Snippets" --> RerankAgent[Reranker Agent]
+    RerankAgent --> Stage2Tool[rerank_documents]
+    Stage2Tool --> VAR[Vertex AI Ranking API]
+    VAR -- "Cross-Encoder Score" --> Reranked[Top K Reranked Docs]
+    end
+    
+    Reranked --> LLM[Gemini 3 Flash]
+    LLM -- "Grounded Response" --> User
+```
+
 *   **Stage 1 (Retrieval):** High-speed search over a large vector/document space using **Vertex AI Search**. Security is enforced via **RBAC-based metadata filtering**, ensuring users only retrieve documents they are authorized to see.
 *   **Stage 2 (Reasoning & Reranking):** An **ADK-based agent** receives the top results from Stage 1. It performs deep reasoning and reranking using **Cross-Encoder embeddings** to ensure the final response is contextually accurate, grounded, and high-fidelity.
 
@@ -59,6 +82,17 @@ The system utilizes a **SequentialAgent** to manage the user journey:
 ## CI/CD Pipeline
 *   **Tool**: Google Cloud Build.
 *   **Flow**:
+
+```mermaid
+graph LR
+    Dev[Commit to main] --> CB[Cloud Build]
+    CB --> Staging[Deploy to Staging]
+    Staging --> Tests[Run Unit/Integration Tests]
+    Tests --> EvalGate[ADK Evaluation Gate]
+    EvalGate -- "Pass" --> Prod[Deploy to Production]
+    EvalGate -- "Fail" --> Block[Block Deployment]
+```
+
     1.  Commit to `main` -> Deploy to **Staging** Folder.
     2.  Run `app/tests/` and `data-pipeline/tests/`.
     3.  Run **ADK Eval** (`make eval`) against staging.

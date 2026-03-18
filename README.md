@@ -3,6 +3,15 @@
 A high-performance, production-grade Agentic RAG solution on Google Cloud Platform, featuring a two-stage retrieval architecture with built-in RBAC and automated evaluation.
 
 ## 🚀 Key Features
+
+```mermaid
+graph LR
+    User --> Agent[ADK Agent]
+    Agent --> Stage1[Vertex AI Search]
+    Stage1 --> Stage2[Vertex AI Ranking API]
+    Stage2 --> Response[Grounded Answer]
+```
+
 - **Two-Stage Retrieval**: Stage 1 (Fast Retrieval via Vertex AI Search) + Stage 2 (Deep Reasoning & Reranking via ADK Agent).
 - **Identity-Aware Proxy (IAP)**: Zero-trust authentication out-of-the-box.
 - **RBAC-Aware Filtering**: Security tags are injected at the retrieval layer to ensure data isolation.
