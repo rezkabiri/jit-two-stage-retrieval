@@ -30,6 +30,29 @@ graph LR
 └── docs/               # Technical use cases & documentation
 ```
 
+## 🚀 CI/CD & Evaluation Gate
+
+This project implements a multi-stage deployment pipeline using **Google Cloud Build**, ensuring that only high-quality, validated models reach production.
+
+```mermaid
+graph LR
+    Build[Build Images] --> DeployStaging[Deploy to Staging]
+    DeployStaging --> EvalGate[ADK Evaluation Gate]
+    EvalGate -- "Pass" --> Promote[Promote to Production]
+    EvalGate -- "Fail" --> Block[Block Deployment]
+    Promote --> DeployProd[Deploy to Production]
+```
+
+### Pipeline Flow
+1.  **Build & Push**: Docker images for the Agent and UI are built and pushed to the Staging Artifact Registry.
+2.  **Staging Deployment**: The Agent is deployed to a Staging Cloud Run service.
+3.  **Evaluation Gate (Crucial)**: The pipeline executes `make eval` against the Staging environment.
+    *   Uses **ADK Evaluation** with the "Golden Set" (`eval/eval_cases.json`).
+    *   Measures Recall, Grounding Score, and Latency.
+    *   **Deployment Blocker**: If the evaluation scores fall below the defined thresholds, the pipeline fails, and the production promotion is blocked.
+4.  **Production Promotion**: Upon successful evaluation, images are tagged and pushed to the Production Artifact Registry.
+5.  **Production Deployment**: The validated Agent and UI are deployed to the Production Cloud Run environment.
+
 ## 🛠️ Quick Start
 
 ### 1. Bootstrap the Environment
