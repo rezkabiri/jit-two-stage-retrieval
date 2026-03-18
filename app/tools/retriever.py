@@ -6,6 +6,9 @@ from google.adk.tools import FunctionTool as tool
 from app.roles import get_user_roles
 
 # Configuration (normally loaded from environment variables)
+PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
+LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+DATA_STORE_ID = os.getenv("DATA_STORE_ID")
 
 @tool
 def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict]:

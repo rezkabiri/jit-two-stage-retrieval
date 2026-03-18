@@ -31,6 +31,9 @@ todo.md
 # .agent
 .agent/
 
+# .gemini
+.gemini/
+
 # FDE Assessment
 fde-assessment/
 docs/FDE-rubric.md
