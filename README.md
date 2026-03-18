@@ -70,7 +70,19 @@ Quickly spin up the backend and frontend for local testing:
 # Follow the instructions in scripts/local-dev/README.md to start the services
 ```
 
-### 3. Provision Infrastructure
+### 3. Accessing the Environments (Staging/Prod)
+Since this project uses custom domains (`rag-stage.example.com`) and Identity-Aware Proxy (IAP), follow these steps to access the web UI:
+
+#### **Staging DNS Workaround**
+If you haven't mapped a real domain, you must point your local `hosts` file to the Load Balancer IP:
+1.  **Get the IP**: Run `terraform output load_balancer_ip` in `infrastructure/environments/stage`.
+2.  **Edit Hosts**: Add the following to `/etc/hosts` (Mac/Linux) or `C:\Windows\System32\drivers\etc\hosts` (Windows):
+    ```text
+    <LB_IP_ADDRESS> rag-stage.example.com
+    ```
+3.  **Bypass SSL Warning**: Navigate to `https://rag-stage.example.com`. Since we use a self-signed certificate fallback for staging, click **Advanced** -> **Proceed (unsafe)**.
+
+### 4. Provision Infrastructure
 Deploy the staging environment:
 ```bash
 cd infrastructure/environments/stage
@@ -78,7 +90,7 @@ terraform init
 terraform apply
 ```
 
-### 3. Unified Commands
+### 5. Unified Commands
 Use the `Makefile` in the root for common development tasks:
 - `make install`: Install dependencies.
 - `make playground`: Start the interactive ADK chat.

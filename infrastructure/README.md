@@ -34,12 +34,18 @@ The infrastructure is organized into two primary layers:
     ```
 2.  **Plan**:
     ```bash
-    terraform plan -var="project_id=<YOUR_STAGE_PROJECT_ID>"
+    terraform plan
     ```
 3.  **Apply**:
     ```bash
-    terraform apply -var="project_id=<YOUR_STAGE_PROJECT_ID>"
+    terraform apply
     ```
+
+### Troubleshooting Existing Resources
+If you encounter an "Already Exists" error for the Global IP address during `apply`, you must import it into the state:
+```bash
+terraform import module.load_balancer.google_compute_global_address.default projects/<PROJECT_ID>/global/addresses/rag-lb-ip-<env>
+```
 
 ## Running Tests
 Run the infrastructure validation script from the root:
