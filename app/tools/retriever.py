@@ -3,26 +3,9 @@ import os
 from typing import List, Optional
 from google.cloud import discoveryengine_v1beta as discoveryengine
 from google.adk.tools import FunctionTool as tool
+from app.roles import get_user_roles
 
 # Configuration (normally loaded from environment variables)
-PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
-LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "global")
-DATA_STORE_ID = os.getenv("DATA_STORE_ID", "rag-docs")
-
-def get_user_roles(user_email: Optional[str]) -> List[str]:
-    """
-    Mock role mapping logic. In production, this would query a database or IAM service.
-    """
-    if not user_email or user_email == "anonymous":
-        return ["public"]
-    
-    roles = ["public"]
-    if user_email.endswith("@finance.com") or user_email == "admin@bank.com":
-        roles.append("finance")
-    if user_email.endswith("@legal.com"):
-        roles.append("legal")
-    
-    return roles
 
 @tool
 def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict]:
