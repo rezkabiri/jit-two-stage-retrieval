@@ -4,7 +4,7 @@ import json
 import functions_framework
 from google.cloud import storage
 from google.cloud import discoveryengine_v1beta as discoveryengine
-from .parser import extract_text, map_rbac_roles
+from parser import extract_text, map_rbac_roles
 
 # Configuration
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")

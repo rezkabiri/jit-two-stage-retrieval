@@ -12,8 +12,7 @@ def extract_text(file_content: bytes, file_name: str) -> str:
         reader = PdfReader(io.BytesIO(file_content))
         text = ""
         for page in reader.pages:
-            text += page.extract_text() + "
-"
+            text += page.extract_text() + "\n"
         return text
     elif file_name.lower().endswith((".txt", ".md")):
         return file_content.decode("utf-8")
