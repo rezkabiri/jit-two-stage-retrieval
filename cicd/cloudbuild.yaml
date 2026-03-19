@@ -66,7 +66,7 @@ steps:
           --image=${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/agent:${SHORT_SHA} \
           --region=${_REGION} \
           --platform=managed \
-          --set-env-vars="GOOGLE_CLOUD_PROJECT=${_STAGING_PROJECT_ID},GOOGLE_CLOUD_LOCATION=us-east4,DATA_STORE_ID=rag-docs-stage-25d725d6,GOOGLE_GENAI_USE_VERTEXAI=True" \
+          --set-env-vars="GOOGLE_CLOUD_PROJECT=${_STAGING_PROJECT_ID},GOOGLE_CLOUD_LOCATION=us-central1,DATA_STORE_ID=rag-docs-stage-25d725d6,GOOGLE_GENAI_USE_VERTEXAI=True" \
           --timeout=600 \
           --no-allow-unauthenticated
 
