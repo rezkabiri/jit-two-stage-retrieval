@@ -99,10 +99,14 @@ resource "google_compute_managed_ssl_certificate" "default" {
 # Self-signed certificate for local testing (Requires manual generation of files)
 # See infrastructure/README.md for instructions.
 resource "google_compute_ssl_certificate" "self_signed" {
-  name        = "rag-self-signed-${var.env}"
+  name_prefix = "rag-self-signed-${var.env}-"
   project     = var.project_id
   private_key = file("${path.module}/self-signed.key")
   certificate = file("${path.module}/self-signed.crt")
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # 6. Global Forwarding Rule (HTTPS)
