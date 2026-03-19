@@ -43,9 +43,10 @@ class RoleManager:
             roles.append("finance")
         elif user_email.endswith("@legal.com"):
             roles.append("legal")
-        elif user_email == "admin@bank.com":
+        elif user_email == "admin@bank.com" or user_email == "admin@rkabiri.altostrat.com":
             roles.append("finance")
             roles.append("admin")
+            roles.append("internal")
             
         return list(set(roles))
 
