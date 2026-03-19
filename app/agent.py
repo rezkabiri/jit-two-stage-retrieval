@@ -7,7 +7,7 @@ from app.reranker import rerank_documents
 print("🚀 Initializing Agent module...")
 
 # Configuration
-MODEL_NAME = "gemini-1.5-flash"
+MODEL_NAME = "gemini-2.0-flash"
 
 def create_retriever_agent():
     return Agent(
