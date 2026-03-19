@@ -149,7 +149,7 @@ resource "google_cloudfunctions2_function" "ingestion_function" {
       value     = var.ingestion_bucket_name
     }
   }
-  
+
   lifecycle {
     ignore_changes = [
       service_config[0].environment_variables,

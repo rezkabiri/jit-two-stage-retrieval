@@ -15,7 +15,7 @@ resource "random_id" "datastore_suffix" {
   byte_length = 4
   keepers = {
     # Force a new ID if we are stuck in a deletion loop
-    version = "v21" 
+    version = "v23" 
   }
 }
 
