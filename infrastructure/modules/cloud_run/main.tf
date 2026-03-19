@@ -59,6 +59,10 @@ resource "google_cloud_run_v2_service" "agent" {
         name  = "DATA_STORE_ID"
         value = var.data_store_id
       }
+      env {
+        name  = "GOOGLE_GENAI_USE_VERTEXAI"
+        value = "true"
+      }
     }
   }
 }
