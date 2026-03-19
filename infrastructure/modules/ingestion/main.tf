@@ -134,8 +134,9 @@ resource "google_cloudfunctions2_function" "ingestion_function" {
     all_traffic_on_latest_revision = true
 
     environment_variables = {
-      GOOGLE_CLOUD_PROJECT = var.project_id
-      DATA_STORE_ID        = var.data_store_id
+      GOOGLE_CLOUD_PROJECT  = var.project_id
+      GOOGLE_CLOUD_LOCATION = "global" # Vertex AI Search location is global
+      DATA_STORE_ID         = var.data_store_id
     }
   }
 
@@ -150,6 +151,7 @@ resource "google_cloudfunctions2_function" "ingestion_function" {
     }
   }
 
+  # We use ignore_changes because of a GCP provider bug with Cloud Functions v2 env vars
   lifecycle {
     ignore_changes = [
       service_config[0].environment_variables,
