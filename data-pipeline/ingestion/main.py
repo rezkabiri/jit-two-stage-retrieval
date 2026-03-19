@@ -51,7 +51,8 @@ def process_gcs_upload(cloud_event):
     document = discoveryengine.Document(
         id=doc_id,
         content=discoveryengine.Document.Content(
-            uri=gcs_uri
+            uri=gcs_uri,
+            mime_type="text/plain"
         ),
         struct_data=metadata
     )
