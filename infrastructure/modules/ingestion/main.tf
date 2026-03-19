@@ -46,29 +46,37 @@ resource "google_project_iam_member" "eventarc_service_agent" {
   member  = "serviceAccount:${google_project_service_identity.eventarc_identity.email}"
 }
 
-# Grant Eventarc permission to invoke the Cloud Run service (Fixes 403)
-resource "google_cloud_run_v2_service_iam_member" "eventarc_invoker" {
+# C. Dedicated Trigger Service Account
+# Using a dedicated SA for the trigger is more reliable than the service agent identity for invocation
+resource "google_service_account" "trigger_sa" {
+  account_id   = "rag-trigger-sa-${var.env}"
+  display_name = "RAG Trigger Service Account (${var.env})"
+  project      = var.project_id
+}
+
+# Grant Trigger SA permission to receive events
+resource "google_project_iam_member" "trigger_receiver" {
+  project = var.project_id
+  role    = "roles/eventarc.eventReceiver"
+  member  = "serviceAccount:${google_service_account.trigger_sa.email}"
+}
+
+# Grant Trigger SA permission to invoke the Cloud Run service (Fixes 403)
+resource "google_cloud_run_v2_service_iam_member" "trigger_invoker" {
   project  = var.project_id
   location = var.region
   name     = google_cloudfunctions2_function.ingestion_function.name
   role     = "roles/run.invoker"
-  member   = "serviceAccount:${google_project_service_identity.eventarc_identity.email}"
+  member   = "serviceAccount:${google_service_account.trigger_sa.email}"
 }
 
-# C. Runtime Service Account (Defaulting to Compute Engine SA for simplicity)
+# D. Runtime Service Account (Defaulting to Compute Engine SA for simplicity)
 data "google_project" "project" {
   project_id = var.project_id
 }
 
 locals {
   compute_sa = "${data.google_project.project.number}-compute@developer.gserviceaccount.com"
-}
-
-# Grant Event Receiver role to the runtime SA
-resource "google_project_iam_member" "event_receiver" {
-  project = var.project_id
-  role    = "roles/eventarc.eventReceiver"
-  member  = "serviceAccount:${local.compute_sa}"
 }
 
 # Grant Vertex AI Editor role to the runtime SA (for indexing)
@@ -123,7 +131,6 @@ resource "google_cloudfunctions2_function" "ingestion_function" {
     available_memory   = "512Mi"
     timeout_seconds    = 120
     
-    # We maintain strict authentication since allUsers is blocked
     all_traffic_on_latest_revision = true
 
     environment_variables = {
@@ -136,7 +143,7 @@ resource "google_cloudfunctions2_function" "ingestion_function" {
     trigger_region = var.region
     event_type     = "google.cloud.storage.object.v1.finalized"
     retry_policy   = "RETRY_POLICY_RETRY"
-    service_account_email = local.compute_sa
+    service_account_email = google_service_account.trigger_sa.email
     event_filters {
       attribute = "bucket"
       value     = var.ingestion_bucket_name
@@ -152,6 +159,6 @@ resource "google_cloudfunctions2_function" "ingestion_function" {
   depends_on = [
     google_project_iam_member.storage_pubsub_publisher,
     google_project_iam_member.eventarc_service_agent,
-    google_project_iam_member.event_receiver
+    google_project_iam_member.trigger_receiver
   ]
 }
