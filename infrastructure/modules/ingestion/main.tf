@@ -46,6 +46,15 @@ resource "google_project_iam_member" "eventarc_service_agent" {
   member  = "serviceAccount:${google_project_service_identity.eventarc_identity.email}"
 }
 
+# Grant Eventarc permission to invoke the Cloud Run service (Fixes 403)
+resource "google_cloud_run_v2_service_iam_member" "eventarc_invoker" {
+  project  = var.project_id
+  location = var.region
+  name     = google_cloudfunctions2_function.ingestion_function.name
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${google_project_service_identity.eventarc_identity.email}"
+}
+
 # C. Runtime Service Account (Defaulting to Compute Engine SA for simplicity)
 data "google_project" "project" {
   project_id = var.project_id
