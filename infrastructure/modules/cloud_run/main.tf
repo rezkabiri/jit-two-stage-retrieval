@@ -53,7 +53,7 @@ resource "google_cloud_run_v2_service" "agent" {
       }
       env {
         name  = "GOOGLE_CLOUD_LOCATION"
-        value = var.region
+        value = "us-east4"
       }
       env {
         name  = "DATA_STORE_ID"
