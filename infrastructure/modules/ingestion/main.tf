@@ -47,6 +47,7 @@ resource "google_project_iam_member" "eventarc_service_agent" {
 }
 
 # Grant Eventarc permission to invoke the Cloud Run service (Fixes 403)
+# We use iam_member to be additive and avoid conflicts
 resource "google_cloud_run_v2_service_iam_member" "eventarc_invoker" {
   project  = var.project_id
   location = var.region
@@ -123,6 +124,9 @@ resource "google_cloudfunctions2_function" "ingestion_function" {
     available_memory   = "512Mi"
     timeout_seconds    = 120
     
+    # We maintain strict authentication since allUsers is blocked
+    all_traffic_on_latest_revision = true
+
     environment_variables = {
       GOOGLE_CLOUD_PROJECT = var.project_id
       DATA_STORE_ID        = var.data_store_id
