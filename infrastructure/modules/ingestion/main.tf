@@ -47,7 +47,6 @@ resource "google_project_iam_member" "eventarc_service_agent" {
 }
 
 # Grant Eventarc permission to invoke the Cloud Run service (Fixes 403)
-# We use iam_member to be additive and avoid conflicts
 resource "google_cloud_run_v2_service_iam_member" "eventarc_invoker" {
   project  = var.project_id
   location = var.region
