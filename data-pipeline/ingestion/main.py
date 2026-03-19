@@ -23,11 +23,21 @@ def process_gcs_upload(cloud_event):
     bucket_name = data["bucket"]
     file_name = data["name"]
 
+    # Skip directory placeholders
+    if file_name.endswith("/"):
+        print(f"📁 Skipping directory placeholder: {file_name}")
+        return
+
     print(f"🔄 Processing new upload: gs://{bucket_name}/{file_name}")
 
     # 1. Download file content
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(file_name)
+    
+    if not blob.exists():
+        print(f"⚠️ Blob gs://{bucket_name}/{file_name} no longer exists. Skipping.")
+        return
+
     file_content = blob.download_as_bytes()
 
     # 2. Extract Text
