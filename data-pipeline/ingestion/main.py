@@ -28,26 +28,15 @@ def process_gcs_upload(cloud_event):
         print(f"📁 Skipping directory placeholder: {file_name}")
         return
 
-    print(f"🔄 Processing new upload: gs://{bucket_name}/{file_name}")
+    gcs_uri = f"gs://{bucket_name}/{file_name}"
+    print(f"🔄 Processing new upload: {gcs_uri}")
 
-    # 1. Download file content
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.blob(file_name)
-    
-    if not blob.exists():
-        print(f"⚠️ Blob gs://{bucket_name}/{file_name} no longer exists. Skipping.")
-        return
-
-    file_content = blob.download_as_bytes()
-
-    # 2. Extract Text
-    content_text = extract_text(file_content, file_name)
-    
-    # 3. Map RBAC Metadata
+    # 1. Map RBAC Metadata
+    # We still need to map roles based on the path
     metadata = map_rbac_roles(file_name)
     print(f"🏷️ Assigned RBAC metadata: {json.dumps(metadata)}")
 
-    # 4. Push to Vertex AI Search
+    # 2. Push to Vertex AI Search using URI
     parent = search_client.branch_path(
         project=PROJECT_ID,
         location=LOCATION,
@@ -58,11 +47,11 @@ def process_gcs_upload(cloud_event):
     # Use the file name (sanitized) as the document ID
     doc_id = file_name.replace("/", "_").replace(".", "_").lower()[:60]
 
+    # Use the URI field which is highly stable across SDK versions
     document = discoveryengine.Document(
         id=doc_id,
         content=discoveryengine.Document.Content(
-            raw_bytes=content_text.encode("utf-8"),
-            mime_type="text/plain"
+            uri=gcs_uri
         ),
         struct_data=metadata
     )
@@ -74,6 +63,6 @@ def process_gcs_upload(cloud_event):
             document_id=doc_id
         )
         response = search_client.create_document(request=request)
-        print(f"✅ Successfully indexed document: {response.name}")
+        print(f"✅ Successfully indexed document from URI: {response.name}")
     except Exception as e:
         print(f"❌ Error indexing document {doc_id}: {str(e)}")
