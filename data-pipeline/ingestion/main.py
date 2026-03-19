@@ -61,7 +61,7 @@ def process_gcs_upload(cloud_event):
     document = discoveryengine.Document(
         id=doc_id,
         content=discoveryengine.Document.Content(
-            content=content_text.encode("utf-8"),
+            raw_bytes=content_text.encode("utf-8"),
             mime_type="text/plain"
         ),
         struct_data=metadata
