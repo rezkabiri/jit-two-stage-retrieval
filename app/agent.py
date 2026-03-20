@@ -11,8 +11,8 @@ print("🚀 Initializing Agent module...")
 # Set USE_VERTEX_AI=false to use AI Studio (Gemini API)
 USE_VERTEX_AI = os.getenv("USE_VERTEX_AI", "true").lower() == "true"
 AI_STUDIO_MODEL = os.getenv("AI_STUDIO_MODEL", "gemini-2.0-flash")
-# Using gemini-1.5-pro-002 as a stable fallback if 2.5 is unavailable or mistyped
-VERTEX_AI_MODEL = os.getenv("VERTEX_AI_MODEL", "gemini-1.5-pro-002")
+# Using gemini-2.0-flash-001 as the default Vertex AI model
+VERTEX_AI_MODEL = os.getenv("VERTEX_AI_MODEL", "gemini-2.0-flash-001")
 
 if USE_VERTEX_AI:
     # ADK uses 'vertex-ai/' prefix to route requests to Google Cloud Vertex AI
