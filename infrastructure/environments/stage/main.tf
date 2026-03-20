@@ -65,6 +65,9 @@ module "cloud_run" {
   gemini_api_key_secret_name = module.secrets.secret_id
   user_email                 = var.user_email
   location                   = "global"
+  use_vertex_ai              = var.use_vertex_ai
+  ai_studio_model            = var.ai_studio_model
+  vertex_ai_model            = var.vertex_ai_model
 }
 
 module "load_balancer" {

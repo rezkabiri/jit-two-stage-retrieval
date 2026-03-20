@@ -5,10 +5,16 @@ variable "region" { type = string }
 variable "env" { type = string }
 variable "service_account_email" { type = string }
 
-# 1. Enable Discovery Engine API explicitly
+# 1. Enable Discovery Engine & AI Platform APIs explicitly
 resource "google_project_service" "discovery_engine" {
   project = var.project_id
   service = "discoveryengine.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "ai_platform" {
+  project = var.project_id
+  service = "aiplatform.googleapis.com"
   disable_on_destroy = false
 }
 
@@ -87,6 +93,12 @@ resource "google_project_iam_member" "bigquery_editor" {
 resource "google_project_iam_member" "bigquery_job_user" {
   project = var.project_id
   role    = "roles/bigquery.jobUser"
+  member  = "serviceAccount:${var.service_account_email}"
+}
+
+resource "google_project_iam_member" "vertex_ai_user" {
+  project = var.project_id
+  role    = "roles/aiplatform.user"
   member  = "serviceAccount:${var.service_account_email}"
 }
 

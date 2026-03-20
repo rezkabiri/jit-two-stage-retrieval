@@ -41,3 +41,19 @@ variable "gemini_api_key" {
   description = "The API key for Gemini (AI Studio)"
   sensitive   = true
 }
+
+variable "use_vertex_ai" {
+  type        = bool
+  default     = true
+  description = "Switch to use Vertex AI instead of AI Studio"
+}
+
+variable "ai_studio_model" {
+  type        = string
+  default     = "gemini-2.0-flash"
+}
+
+variable "vertex_ai_model" {
+  type        = string
+  default     = "gemini-1.5-pro-002"
+}

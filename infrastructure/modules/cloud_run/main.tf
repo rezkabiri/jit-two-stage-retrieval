@@ -17,6 +17,22 @@ variable "location" {
   description = "The location of the Vertex AI Data Store (usually global)"
 }
 
+variable "use_vertex_ai" {
+  type        = bool
+  default     = true
+  description = "Switch to use Vertex AI instead of AI Studio"
+}
+
+variable "ai_studio_model" {
+  type        = string
+  default     = "gemini-2.0-flash"
+}
+
+variable "vertex_ai_model" {
+  type        = string
+  default     = "gemini-1.5-pro-002"
+}
+
 # 0. Fetch Project Info (to get project number for IAP Service Agent)
 data "google_project" "project" {
   project_id = var.project_id
@@ -66,8 +82,20 @@ resource "google_cloud_run_v2_service" "agent" {
         value = var.data_store_id
       }
       env {
+        name  = "USE_VERTEX_AI"
+        value = tostring(var.use_vertex_ai)
+      }
+      env {
+        name  = "AI_STUDIO_MODEL"
+        value = var.ai_studio_model
+      }
+      env {
+        name  = "VERTEX_AI_MODEL"
+        value = var.vertex_ai_model
+      }
+      env {
         name  = "GOOGLE_GENAI_USE_VERTEXAI"
-        value = "false"
+        value = tostring(var.use_vertex_ai)
       }
       env {
         name = "GOOGLE_API_KEY"

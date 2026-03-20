@@ -6,9 +6,22 @@ from app.reranker import rerank_documents
 
 print("🚀 Initializing Agent module...")
 
-# Configuration
-# Switching to 2.0-flash for higher Free Tier quota (1,500 RPD vs 20 RPD for preview models)
-MODEL_NAME = "gemini-2.0-flash"
+# Configuration Switch: Vertex AI vs AI Studio
+# Set USE_VERTEX_AI=true to use Vertex AI Model Garden (default for reliability)
+# Set USE_VERTEX_AI=false to use AI Studio (Gemini API)
+USE_VERTEX_AI = os.getenv("USE_VERTEX_AI", "true").lower() == "true"
+AI_STUDIO_MODEL = os.getenv("AI_STUDIO_MODEL", "gemini-2.0-flash")
+# Using gemini-1.5-pro-002 as a stable fallback if 2.5 is unavailable or mistyped
+VERTEX_AI_MODEL = os.getenv("VERTEX_AI_MODEL", "gemini-1.5-pro-002")
+
+if USE_VERTEX_AI:
+    # ADK uses 'vertex-ai/' prefix to route requests to Google Cloud Vertex AI
+    MODEL_NAME = f"vertex-ai/{VERTEX_AI_MODEL}"
+    print(f"🔗 Model Backend: Vertex AI ({VERTEX_AI_MODEL})")
+else:
+    # Standard model names route to AI Studio (requires GOOGLE_API_KEY)
+    MODEL_NAME = AI_STUDIO_MODEL
+    print(f"🔗 Model Backend: AI Studio ({AI_STUDIO_MODEL})")
 
 
 def create_retriever_agent():
