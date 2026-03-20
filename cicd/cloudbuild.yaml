@@ -77,9 +77,9 @@ steps:
         python3 -m pytest data-pipeline/tests/
     waitFor: ['-'] # Start immediately
 
-  - name: 'hashicorp/terraform:1.5.0'
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'validate-terraform'
-    entrypoint: 'sh'
+    entrypoint: 'bash'
     args:
       - '-c'
       - |
