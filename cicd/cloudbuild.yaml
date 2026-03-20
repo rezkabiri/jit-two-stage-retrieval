@@ -62,7 +62,7 @@ steps:
       - '-c'
       - |
         pip install -r app/requirements.txt pytest-asyncio --quiet
-        export PYTHONPATH=$PYTHONPATH:$(pwd)
+        export PYTHONPATH=$$PYTHONPATH:$$(pwd)
         python3 -m pytest app/tests/
     waitFor: ['-'] # Start immediately
 
@@ -73,7 +73,7 @@ steps:
       - '-c'
       - |
         pip install -r data-pipeline/ingestion/requirements.txt pytest --quiet
-        export PYTHONPATH=$PYTHONPATH:$(pwd)/data-pipeline/ingestion
+        export PYTHONPATH=$$PYTHONPATH:$$(pwd)/data-pipeline/ingestion
         python3 -m pytest data-pipeline/tests/
     waitFor: ['-'] # Start immediately
 
