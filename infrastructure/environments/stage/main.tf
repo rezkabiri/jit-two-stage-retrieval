@@ -41,15 +41,24 @@ module "vertex_ai" {
   env        = "stage"
 }
 
+module "secrets" {
+  source                = "../../modules/secrets"
+  project_id            = module.project.project_id
+  env                   = "stage"
+  gemini_api_key        = var.gemini_api_key
+  service_account_email = "${module.project.project_number}-compute@developer.gserviceaccount.com"
+}
+
 module "cloud_run" {
-  source        = "../../modules/cloud_run"
-  project_id    = module.project.project_id
-  region        = var.region
-  env           = "stage"
-  agent_image   = var.agent_image
-  ui_image      = var.ui_image
-  data_store_id = module.vertex_ai.data_store_id
-  user_email    = var.user_email
+  source                     = "../../modules/cloud_run"
+  project_id                 = module.project.project_id
+  region                     = var.region
+  env                        = "stage"
+  agent_image                = var.agent_image
+  ui_image                   = var.ui_image
+  data_store_id              = module.vertex_ai.data_store_id
+  gemini_api_key_secret_name = module.secrets.secret_id
+  user_email                 = var.user_email
 }
 
 module "load_balancer" {

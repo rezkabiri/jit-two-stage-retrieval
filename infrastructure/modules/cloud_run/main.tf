@@ -6,6 +6,7 @@ variable "env" { type = string }
 variable "agent_image" { type = string }
 variable "ui_image" { type = string }
 variable "data_store_id" { type = string }
+variable "gemini_api_key_secret_name" { type = string }
 variable "user_email" { 
   type        = string
   description = "The email address of the user allowed to invoke the services"
@@ -60,8 +61,13 @@ resource "google_cloud_run_v2_service" "agent" {
         value = var.data_store_id
       }
       env {
-        name  = "GOOGLE_GENAI_USE_VERTEXAI"
-        value = "true"
+        name = "GOOGLE_API_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = var.gemini_api_key_secret_name
+            version = "latest"
+          }
+        }
       }
     }
   }
