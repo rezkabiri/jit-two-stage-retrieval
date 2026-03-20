@@ -1,17 +1,26 @@
-# E2E Security & RBAC Testing
+# End-to-End (E2E) System Tests
 
-This directory contains functional tests designed to verify the security boundaries of the JIT Two-Stage Retrieval system.
+## Scope
+This folder contains tests that validate the entire integrated system in a live environment (Staging).
 
-## The "Red Team" Strategy
-Because security is the core value of this architecture, we use automated "Red Team" tests to attempt to bypass RBAC filters. We mock the underlying Vertex AI Search (Discovery Engine) responses to focus specifically on whether our **filter injection logic** is correct.
-
-## What is Tested?
-- **Identity Extraction**: Ensuring the `X-Goog-Authenticated-User-Email` (simulated in session state) is correctly captured.
-- **Filter Construction**: Verifying that the `stage_1_retrieval` tool builds the correct `discoveryengine.SearchRequest` filter string (e.g., `role: ANY("finance")`).
-- **Default Deny**: Confirming that requests without a valid identity default to `role: ANY("public")`.
+### Key Components Tested:
+- **Full Path Retrieval**: User -> Load Balancer -> IAP -> Cloud Run -> Vertex AI -> Cloud Run -> User.
+- **RBAC Enforcement**: Verifying that different user emails receive different sets of documents based on their roles.
+- **Feedback Persistence**: Ensuring that a "Thumbs Up" in the UI results in a new row in the `agent_feedback.user_feedback` BigQuery table.
+- **Session Continuity**: Checking that conversation history is maintained for the user.
 
 ## How to Run
-From the root:
+These tests require a live Staging environment and a valid user token (or service account with IAP access).
 ```bash
-pytest tests/e2e/
+# Set your staging URL
+export STAGING_URL="https://rag-stage.example.com"
+export ID_TOKEN=$(gcloud auth print-identity-token)
+
+cd tests/e2e
+pytest test_rbac_security.py
 ```
+
+## Expectations
+- **Identity-based filtering**: A request from `admin@rkabiri.altostrat.com` MUST return documents from the `private/admin` folder.
+- **Public-only fallback**: An anonymous or unrecognized user MUST NOT see any non-public documents.
+- **Telemetry verification**: Integration tests for BigQuery should account for a 10-20 second streaming buffer delay.
