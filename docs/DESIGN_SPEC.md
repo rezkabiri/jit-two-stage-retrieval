@@ -44,9 +44,24 @@ Refer to `docs/industry_use_cases_rag.md` for detailed scenarios in:
 *   **Authorization**: The Agent extracts the `X-Goog-Authenticated-User-Email` header. This email is mapped to a role/permission set which is injected as a filter into the Stage 1 retrieval query.
 
 ### 2. The Data Engine (ETL)
+
+```mermaid
+graph TD
+    User([User/System]) -->|Uploads Document| GCS[GCS Ingestion Bucket]
+    GCS -->|Eventarc Trigger| CF[Cloud Function: process_gcs_upload]
+    
+    subgraph ETL Pipeline
+        CF --> Parser[Document Parser]
+        Parser --> RBAC[RBAC Mapper]
+        RBAC -- Extracts Text & Metadata --> Meta[Enriched Document]
+    end
+    
+    Meta -->|Index Request| VAIS[(Vertex AI Search / Discovery Engine)]
+```
+
 *   **Source**: GCS Buckets (Staging/Production).
 *   **Trigger**: Eventarc/GCS notification kicks off a Cloud Build or Cloud Function.
-*   **Processing**: Python-based ETL parses documents, extracts metadata, assigns RBAC tags based on folder structure, and indexes into Vertex AI Search.
+*   **Processing**: Python-based ETL parses documents (handling PDF text extraction), extracts metadata, assigns RBAC tags based on the folder structure, and indexes the enriched documents into Vertex AI Search.
 *   **Location Strategy**: Discovery Engine (Vertex AI Search) is globally managed, while BigQuery and GCS reside in the regional bucket/dataset for latency and data residency compliance.
 
 ### 3. Feedback Loop

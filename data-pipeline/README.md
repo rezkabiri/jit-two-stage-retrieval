@@ -3,12 +3,26 @@
 This directory contains the Python logic for the automated ETL pipeline that powers the RAG solution.
 
 ## How it Works
+```mermaid
+graph TD
+    User([User/System]) -->|Upload PDF, TXT, MD| GCS[GCS Ingestion Bucket]
+    GCS -->|Eventarc Trigger| CF[Cloud Function: process_gcs_upload]
+    
+    subgraph ETL Pipeline
+        CF --> Parser[Document Parser]
+        Parser --> RBAC[RBAC Mapper]
+        RBAC -- Extracts Text & Metadata --> Meta[Enriched Document]
+    end
+    
+    Meta -->|Index Request| VAIS[(Vertex AI Search / Discovery Engine)]
+```
+
 1.  **GCS Trigger**: A user or automated system uploads a document (PDF, TXT, MD) to the designated ingestion bucket.
-2.  **Cloud Function**: An Eventarc or Cloud Storage trigger kicks off the `process_gcs_upload` function in `ingestion/main.py`.
+2.  **Cloud Function**: An Eventarc or Cloud Storage trigger kicks off the `process_gcs_upload` function located in `ingestion/main.py`.
 3.  **Parsing & Enrichment**:
-    *   **Parser**: Extracts text from the document using `pypdf`.
-    *   **RBAC Mapping**: Inspects the folder path (e.g., `gs://bucket/finance/*.pdf`) and automatically assigns security metadata (e.g., `role: finance`).
-4.  **Indexing**: The text and metadata are pushed to the **Vertex AI Search (Discovery Engine)** data store.
+    *   **Parser**: Extracts raw text from the document (using `pypdf` for PDFs).
+    *   **RBAC Mapping**: Inspects the origin folder path (e.g., `gs://bucket/finance/*.pdf`) and automatically assigns security metadata (e.g., `role: finance`).
+4.  **Indexing**: The enriched text and metadata are securely pushed to the **Vertex AI Search (Discovery Engine)** data store, ready for Stage 1 retrieval.
 
 ## Directory Structure
 - `ingestion/main.py`: The entry point for the Cloud Function.
