@@ -140,6 +140,13 @@ resource "google_cloudfunctions2_function" "ingestion_function" {
     }
   }
 
+  # We use ignore_changes because of a GCP provider bug with Cloud Functions v2 env vars
+  lifecycle {
+    ignore_changes = [
+      service_config[0].environment_variables,
+    ]
+  }
+
   event_trigger {
     trigger_region = var.region
     event_type     = "google.cloud.storage.object.v1.finalized"
