@@ -18,9 +18,9 @@ def test_health_check():
 def test_chat_endpoint(mock_record, mock_run_async):
     """Verify chat endpoint extracts user email and returns response."""
     # Mock runner events
-    mock_event = AsyncMock()
+    mock_event = MagicMock() # Use regular MagicMock for synchronous checks
     mock_event.is_final_response.return_value = True
-    mock_event.content.parts = [AsyncMock(text="Hello, I am an AI.")]
+    mock_event.content.parts = [MagicMock(text="Hello, I am an AI.")]
     
     async def mock_generator(*args, **kwargs):
         yield mock_event

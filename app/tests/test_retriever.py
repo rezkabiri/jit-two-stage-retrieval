@@ -16,8 +16,8 @@ def test_stage_1_retrieval_rbac_filter(mock_client_class):
     mock_response.results = []
     mock_client.search.return_value = mock_response
 
-    # Test with a finance user
-    stage_1_retrieval("what is the risk?", user_email="user@finance.com")
+    # Test with a finance user - calling the underlying function
+    stage_1_retrieval.func("what is the risk?", user_email="user@finance.com")
 
     # Inspect the call to search
     args, kwargs = mock_client.search.call_args
@@ -30,6 +30,6 @@ def test_stage_1_retrieval_rbac_filter(mock_client_class):
 def test_stage_1_retrieval_no_project():
     """Tool should return an error if PROJECT_ID is not set."""
     with patch("app.tools.retriever.PROJECT_ID", None):
-        results = stage_1_retrieval("query")
+        results = stage_1_retrieval.func("query")
         assert "error" in results[0]
         assert "GOOGLE_CLOUD_PROJECT is not set" in results[0]["error"]
