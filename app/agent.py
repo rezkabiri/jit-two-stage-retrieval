@@ -7,7 +7,8 @@ from app.reranker import rerank_documents
 print("🚀 Initializing Agent module...")
 
 # Configuration
-MODEL_NAME = "gemini-flash-latest"
+# Switching to 2.0-flash for higher Free Tier quota (1,500 RPD vs 20 RPD for preview models)
+MODEL_NAME = "gemini-2.0-flash"
 
 
 def create_retriever_agent():
