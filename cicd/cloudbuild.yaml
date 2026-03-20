@@ -53,7 +53,41 @@ steps:
         docker push ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA}
         docker push ${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:latest
 
-  # --- STAGE 2: DEPLOY TO STAGING ---
+  # --- STAGE 2: TESTING ---
+  # Parallelized Unit Tests
+  - name: 'python:3.11'
+    id: 'test-agent-core'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        pip install -r app/requirements.txt pytest-asyncio --quiet
+        export PYTHONPATH=$PYTHONPATH:$(pwd)
+        python3 -m pytest app/tests/
+    waitFor: ['-'] # Start immediately
+
+  - name: 'python:3.11'
+    id: 'test-ingestion-pipeline'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        pip install -r data-pipeline/ingestion/requirements.txt pytest --quiet
+        export PYTHONPATH=$PYTHONPATH:$(pwd)/data-pipeline/ingestion
+        python3 -m pytest data-pipeline/tests/
+    waitFor: ['-'] # Start immediately
+
+  - name: 'hashicorp/terraform:1.5.0'
+    id: 'validate-terraform'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        terraform -chdir=infrastructure/environments/stage init -backend=false
+        terraform -chdir=infrastructure/environments/stage validate
+    waitFor: ['-'] # Start immediately
+
+  # --- STAGE 3: DEPLOY TO STAGING ---
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'deploy-stage'
     entrypoint: 'bash'
@@ -67,6 +101,7 @@ steps:
           --region=${_REGION} \
           --platform=managed \
           --no-allow-unauthenticated
+    waitFor: ['test-agent-core', 'test-ingestion-pipeline', 'validate-terraform', 'push-images-staging']
 
 
   # --- STAGE 3: EVALUATION GATE ---

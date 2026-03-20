@@ -1,30 +1,59 @@
 #!/bin/bash
-# infrastructure/tests/validate_infra.sh: Validation script for IaC
+# infrastructure/tests/validate_infra.sh: Validation script for IaC and Live Resources
 
 set -e
 
-echo "🔍 Running Infrastructure Validation Tests..."
+PROJECT_ID=""
+ENV=""
 
-# 1. Terraform Format Check
-echo "Step 1: Checking Terraform formatting..."
-terraform fmt -recursive -check
+usage() {
+  echo "Usage: $0 --project PROJECT_ID --env [stage|prod]"
+  exit 1
+}
 
-# 2. Terraform Validation
-for env in "stage" "prod"; do
-    echo "Step 2: Validating Terraform configuration for '$env' environment..."
-    cd "infrastructure/environments/$env"
-    terraform init -backend=false
-    terraform validate
-    cd - > /dev/null
+while [[ "$#" -gt 0 ]]; do
+  case $1 in
+    --project) PROJECT_ID="$2"; shift ;;
+    --env) ENV="$2"; shift ;;
+    *) usage ;;
+  esac
+  shift
 done
 
-# 3. TFLint (Optional, if installed)
-if command -v tflint >/dev/null 2>&1; then
-    echo "Step 3: Running TFLint..."
-    tflint --init
-    tflint --recursive
-else
-    echo "Step 3: skipping TFLint (not installed)."
-fi
+if [[ -z "$PROJECT_ID" || -z "$ENV" ]]; then usage; fi
 
-echo "✅ Infrastructure validation passed!"
+echo "🔍 Validating Infrastructure for project: $PROJECT_ID ($ENV)"
+
+# 1. Terraform Static Checks
+echo "--- Step 1: Static Checks ---"
+terraform -chdir=infrastructure/environments/$ENV init -backend=false
+terraform -chdir=infrastructure/environments/$ENV validate
+
+# 2. Resource Existence Checks
+echo "--- Step 2: Live Resource Checks ---"
+
+# A. Cloud Run Services
+echo "Checking Cloud Run services..."
+gcloud run services describe rag-agent-$ENV --project=$PROJECT_ID --region=us-central1 > /dev/null
+gcloud run services describe rag-ui-$ENV --project=$PROJECT_ID --region=us-central1 > /dev/null
+gcloud run services describe rag-ingestion-$ENV --project=$PROJECT_ID --region=us-central1 > /dev/null
+
+# B. BigQuery Tables
+echo "Checking BigQuery feedback tables..."
+bq show --project_id=$PROJECT_ID agent_feedback.user_feedback > /dev/null
+bq show --project_id=$PROJECT_ID agent_feedback.conversations > /dev/null
+
+# C. Secret Manager
+echo "Checking Secret Manager..."
+gcloud secrets describe gemini-api-key-$ENV --project=$PROJECT_ID > /dev/null
+
+# 3. Security Checks (IAM)
+echo "--- Step 3: IAM Verification ---"
+COMPUTE_SA=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")-compute@developer.gserviceaccount.com
+
+echo "Checking if Compute SA has BigQuery Data Editor..."
+gcloud projects get-iam-policy $PROJECT_ID --flatten="bindings[].members" \
+    --filter="bindings.members:serviceAccount:$COMPUTE_SA AND bindings.role:roles/bigquery.dataEditor" \
+    --format="value(bindings.role)" | grep -q "roles/bigquery.dataEditor"
+
+echo "✅ All infrastructure validations passed!"

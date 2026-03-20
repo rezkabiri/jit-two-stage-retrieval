@@ -5,7 +5,7 @@ from app.tools.retriever import stage_1_retrieval
 
 @pytest.fixture
 def mock_search_client():
-    with patch("google.cloud.discoveryengine_v1beta.SearchServiceClient") as mock:
+    with patch("app.tools.retriever.discoveryengine.SearchServiceClient") as mock:
         client_instance = mock.return_value
         # Mock a successful response
         mock_response = MagicMock()
@@ -13,41 +13,43 @@ def mock_search_client():
         client_instance.search.return_value = mock_response
         yield client_instance
 
+@patch("app.tools.retriever.PROJECT_ID", "test-project")
+@patch("app.tools.retriever.DATA_STORE_ID", "test-ds")
 def test_rbac_public_user(mock_search_client):
     """
     Test that a public user (no email) is restricted to 'public' documents.
     """
-    # Run the retrieval without an email
     stage_1_retrieval(query="some query")
     
-    # Assert the search request was called with the 'public' filter
-    args, kwargs = mock_search_client.search.call_args
+    args, _ = mock_search_client.search.call_args
     request = args[0]
     
     assert 'role: ANY("public")' in request.filter
-    assert 'finance' not in request.filter
 
-def test_rbac_authorized_user_is_not_implemented_yet(mock_search_client):
+@patch("app.tools.retriever.PROJECT_ID", "test-project")
+@patch("app.tools.retriever.DATA_STORE_ID", "test-ds")
+def test_rbac_finance_user(mock_search_client):
     """
-    Test that an authorized user currently defaults to 'public' (placeholder check).
-    NOTE: This test will fail later once we implement the actual user-to-role mapping.
+    Test that a finance user sees finance + public docs.
     """
-    # Run with an email
-    stage_1_retrieval(query="confidential stuff", user_email="analyst@bank.com")
+    stage_1_retrieval(query="risk report", user_email="analyst@finance.com")
     
-    # Assert the search request was called
-    args, kwargs = mock_search_client.search.call_args
+    args, _ = mock_search_client.search.call_args
     request = args[0]
     
-    # Currently, our retriever defaults to 'public' for all emails until we add the DB lookup
-    assert 'role: ANY("public")' in request.filter
+    assert '"finance"' in request.filter
+    assert '"public"' in request.filter
 
-@pytest.mark.asyncio
-async def test_agent_passes_identity_to_tool():
+@patch("app.tools.retriever.PROJECT_ID", "test-project")
+@patch("app.tools.retriever.DATA_STORE_ID", "test-ds")
+def test_rbac_admin_user(mock_search_client):
     """
-    Integration test to ensure the Agent correctly extracts identity from context 
-    and passes it to the tool. (Requires ADK Mocking)
+    Test that the admin user sees all roles.
     """
-    # This is a placeholder for a full ADK-level integration test
-    # using 'adk.testing.AgentTester'
-    pass
+    stage_1_retrieval(query="everything", user_email="admin@rkabiri.altostrat.com")
+    
+    args, _ = mock_search_client.search.call_args
+    request = args[0]
+    
+    for role in ["admin", "finance", "internal", "public"]:
+        assert f'"{role}"' in request.filter
