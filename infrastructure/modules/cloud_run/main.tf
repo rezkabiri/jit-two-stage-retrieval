@@ -11,6 +11,11 @@ variable "user_email" {
   type        = string
   description = "The email address of the user allowed to invoke the services"
 }
+variable "location" {
+  type        = string
+  default     = "global"
+  description = "The location of the Vertex AI Data Store (usually global)"
+}
 
 # 0. Fetch Project Info (to get project number for IAP Service Agent)
 data "google_project" "project" {
@@ -54,7 +59,7 @@ resource "google_cloud_run_v2_service" "agent" {
       }
       env {
         name  = "GOOGLE_CLOUD_LOCATION"
-        value = var.region
+        value = var.location
       }
       env {
         name  = "DATA_STORE_ID"
