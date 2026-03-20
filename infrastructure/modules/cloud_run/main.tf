@@ -61,6 +61,10 @@ resource "google_cloud_run_v2_service" "agent" {
         value = var.data_store_id
       }
       env {
+        name  = "GOOGLE_GENAI_USE_VERTEXAI"
+        value = "false"
+      }
+      env {
         name = "GOOGLE_API_KEY"
         value_source {
           secret_key_ref {
