@@ -108,7 +108,7 @@ Use the `Makefile` in the root for common development tasks:
 - `make deploy-stage`: Trigger the staging deployment pipeline.
 
 ## 📖 Documentation
-- [Technical Design Specification](DESIGN_SPEC.md)
+- [Technical Design Specification](docs/DESIGN_SPEC.md)
 - [Infrastructure Guide](infrastructure/README.md)
 - [Bootstrap Guide](scripts/README.md)
 - [Industry Use Cases](docs/industry_use_cases_rag.md)
