@@ -15,8 +15,9 @@ AI_STUDIO_MODEL = os.getenv("AI_STUDIO_MODEL", "gemini-2.0-flash")
 VERTEX_AI_MODEL = os.getenv("VERTEX_AI_MODEL", "gemini-2.0-flash")
 
 if USE_VERTEX_AI:
-    # ADK uses 'vertex-ai/' prefix to route requests to Google Cloud Vertex AI
-    MODEL_NAME = f"vertex-ai/{VERTEX_AI_MODEL}"
+    # The switch to Vertex AI is handled by the GOOGLE_GENAI_USE_VERTEXAI=true 
+    # environment variable. We pass the clean model identifier.
+    MODEL_NAME = VERTEX_AI_MODEL
     print(f"🔗 Model Backend: Vertex AI ({VERTEX_AI_MODEL})")
 else:
     # Standard model names route to AI Studio (requires GOOGLE_API_KEY)
