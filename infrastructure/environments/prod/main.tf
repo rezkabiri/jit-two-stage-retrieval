@@ -35,10 +35,11 @@ module "storage" {
 }
 
 module "vertex_ai" {
-  source     = "../../modules/vertex_ai"
-  project_id = module.project.project_id
-  region     = var.region
-  env        = "prod"
+  source                = "../../modules/vertex_ai"
+  project_id            = module.project.project_id
+  region                = var.region
+  env                   = "prod"
+  service_account_email = "${module.project.project_number}-compute@developer.gserviceaccount.com"
 }
 
 module "secrets" {

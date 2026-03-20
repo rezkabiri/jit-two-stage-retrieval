@@ -3,6 +3,7 @@
 variable "project_id" { type = string }
 variable "region" { type = string }
 variable "env" { type = string }
+variable "service_account_email" { type = string }
 
 # 1. Enable Discovery Engine API explicitly
 resource "google_project_service" "discovery_engine" {
@@ -15,7 +16,7 @@ resource "random_id" "datastore_suffix" {
   byte_length = 4
   keepers = {
     # Force a new ID if we are stuck in a deletion loop
-    version = "v31" 
+    version = "v32" 
   }
 }
 
@@ -74,6 +75,19 @@ resource "google_bigquery_table" "conversations" {
   {"name": "timestamp", "type": "TIMESTAMP", "mode": "REQUIRED"}
 ]
 EOF
+}
+
+# 6. IAM Permissions for BigQuery
+resource "google_project_iam_member" "bigquery_editor" {
+  project = var.project_id
+  role    = "roles/bigquery.dataEditor"
+  member  = "serviceAccount:${var.service_account_email}"
+}
+
+resource "google_project_iam_member" "bigquery_job_user" {
+  project = var.project_id
+  role    = "roles/bigquery.jobUser"
+  member  = "serviceAccount:${var.service_account_email}"
 }
 
 output "data_store_id" {
