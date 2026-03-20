@@ -151,13 +151,6 @@ resource "google_cloudfunctions2_function" "ingestion_function" {
     }
   }
 
-  # We use ignore_changes because of a GCP provider bug with Cloud Functions v2 env vars
-  lifecycle {
-    ignore_changes = [
-      service_config[0].environment_variables,
-    ]
-  }
-
   depends_on = [
     google_project_iam_member.storage_pubsub_publisher,
     google_project_iam_member.eventarc_service_agent,
