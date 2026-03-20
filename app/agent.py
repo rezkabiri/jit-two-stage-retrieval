@@ -11,16 +11,17 @@ print("🚀 Initializing Agent module...")
 # Set USE_VERTEX_AI=false to use AI Studio (Gemini API)
 USE_VERTEX_AI = os.getenv("USE_VERTEX_AI", "true").lower() == "true"
 AI_STUDIO_MODEL = os.getenv("AI_STUDIO_MODEL", "gemini-2.0-flash")
-# Using gemini-2.0-flash as the default Vertex AI model (alias)
 VERTEX_AI_MODEL = os.getenv("VERTEX_AI_MODEL", "gemini-2.0-flash")
 
 if USE_VERTEX_AI:
-    # The switch to Vertex AI is handled by the GOOGLE_GENAI_USE_VERTEXAI=true 
-    # environment variable. We pass the clean model identifier.
+    # Force Vertex AI routing by ensuring the API Key is NOT in the environment.
+    # When GOOGLE_API_KEY is present, the SDK often defaults to AI Studio.
+    if "GOOGLE_API_KEY" in os.environ:
+        del os.environ["GOOGLE_API_KEY"]
+    
     MODEL_NAME = VERTEX_AI_MODEL
     print(f"🔗 Model Backend: Vertex AI ({VERTEX_AI_MODEL})")
 else:
-    # Standard model names route to AI Studio (requires GOOGLE_API_KEY)
     MODEL_NAME = AI_STUDIO_MODEL
     print(f"🔗 Model Backend: AI Studio ({AI_STUDIO_MODEL})")
 
