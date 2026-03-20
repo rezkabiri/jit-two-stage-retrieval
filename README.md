@@ -32,26 +32,35 @@ graph LR
 
 ## 🚀 CI/CD & Evaluation Gate
 
-This project implements a multi-stage deployment pipeline using **Google Cloud Build**, ensuring that only high-quality, validated models reach production.
+This project implements a high-velocity deployment pipeline using **Google Cloud Build**, utilizing parallel execution to minimize "Commit-to-Staging" latency while maintaining strict security and quality gates.
 
 ```mermaid
-graph LR
-    Build[Build Images] --> DeployStaging[Deploy to Staging]
+graph TD
+    Push[Push to main] --> CB[Cloud Build]
+    
+    subgraph Parallel_Checks [Parallel Validation]
+        direction LR
+        CB --> Docker[Docker Build]
+        CB --> Unit[Agent Unit Tests]
+        CB --> ETL[ETL Parser Tests]
+        CB --> TF[Terraform Validate]
+    end
+    
+    Parallel_Checks --> DeployStaging[Deploy to Staging]
     DeployStaging --> EvalGate[ADK Evaluation Gate]
     EvalGate -- "Pass" --> Promote[Promote to Production]
     EvalGate -- "Fail" --> Block[Block Deployment]
-    Promote --> DeployProd[Deploy to Production]
 ```
 
-### Pipeline Flow
-1.  **Build & Push**: Docker images for the Agent and UI are built and pushed to the Staging Artifact Registry.
-2.  **Staging Deployment**: The Agent is deployed to a Staging Cloud Run service.
-3.  **Evaluation Gate (Crucial)**: The pipeline executes `make eval` against the Staging environment.
-    *   Uses **ADK Evaluation** with the "Golden Set" (`eval/eval_cases.json`).
-    *   Measures Recall, Grounding Score, and Latency.
-    *   **Deployment Blocker**: If the evaluation scores fall below the defined thresholds, the pipeline fails, and the production promotion is blocked.
-4.  **Production Promotion**: Upon successful evaluation, images are tagged and pushed to the Production Artifact Registry.
-5.  **Production Deployment**: The validated Agent and UI are deployed to the Production Cloud Run environment.
+### Pipeline Tiers
+1.  **Parallel Validation (Fast-Fail)**:
+    *   **Docker Build**: Containers are built and pushed to Artifact Registry.
+    *   **Agent Unit Tests**: Python tests for `roles.py`, `retriever.py`, and FastAPI endpoints.
+    *   **Ingestion Parser Tests**: Validation of RBAC metadata extraction logic.
+    *   **Infrastructure Check**: Terraform `validate` and `fmt` checks.
+2.  **Staging Deployment**: Automated deployment to the Staging Cloud Run environment.
+3.  **Evaluation Gate (ADK Eval)**: Automated quality check measuring Recall and Grounding Score against the golden set.
+4.  **Production Promotion**: Image tagging and deployment to the Production environment only after all gates pass.
 
 ## 🛠️ Quick Start
 

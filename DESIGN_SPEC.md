@@ -81,19 +81,28 @@ The system utilizes a **SequentialAgent** to manage the user journey:
 
 ## CI/CD Pipeline
 *   **Tool**: Google Cloud Build.
-*   **Flow**:
+*   **Strategy**: "Fast-Fail" parallelized validation.
 
 ```mermaid
-graph LR
-    Dev[Commit to main] --> CB[Cloud Build]
-    CB --> Staging[Deploy to Staging]
-    Staging --> Tests[Run Unit/Integration Tests]
-    Tests --> EvalGate[ADK Evaluation Gate]
-    EvalGate -- "Pass" --> Prod[Deploy to Production]
+graph TD
+    Commit[Commit to main] --> CB[Cloud Build Trigger]
+    
+    subgraph Parallel_Validation [Parallel Execution & Build]
+        direction LR
+        CB --> Build[Docker Build & Push]
+        CB --> UnitTests[Agent Core Unit Tests]
+        CB --> ETLTests[Ingestion Parser Tests]
+        CB --> InfraTests[Terraform Validate]
+    end
+    
+    Parallel_Validation --> DeployStaging[Deploy to Staging]
+    DeployStaging --> EvalGate[ADK Evaluation Gate]
+    EvalGate -- "Pass" --> Prod[Promote to Production]
     EvalGate -- "Fail" --> Block[Block Deployment]
 ```
 
-    1.  Commit to `main` -> Deploy to **Staging** Folder.
-    2.  Run `app/tests/` and `data-pipeline/tests/`.
-    3.  Run **ADK Eval** (`make eval`) against staging.
-    4.  Upon passing quality gates -> Deploy to **Production** Folder.
+### Testing Tiers
+1.  **Agent Core (Unit/Integration)**: Validates SequentialAgent logic, RBAC mapping in `roles.py`, and retriever tool query construction.
+2.  **Ingestion ETL (Unit)**: Verifies markdown/PDF parsing and RBAC metadata extraction logic in `data-pipeline`.
+3.  **Infrastructure (Validation)**: Performs Terraform `validate` and `fmt` checks alongside live resource health checks via `validate_infra.sh`.
+4.  **ADK Evaluation (Quality Gate)**: Automated grounding and recall assessment using the golden evaluation set.
