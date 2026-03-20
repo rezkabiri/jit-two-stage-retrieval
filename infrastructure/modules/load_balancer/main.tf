@@ -96,13 +96,34 @@ resource "google_compute_managed_ssl_certificate" "default" {
   }
 }
 
-# Self-signed certificate for local testing (Requires manual generation of files)
-# See infrastructure/README.md for instructions.
+# 5. Self-signed certificate for staging/validation (Dynamically generated)
+resource "tls_private_key" "self_signed" {
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
+
+resource "tls_self_signed_cert" "self_signed" {
+  private_key_pem = tls_private_key.self_signed.private_key_pem
+
+  subject {
+    common_name  = "rag-${var.env}.example.com"
+    organization = "JIT RAG"
+  }
+
+  validity_period_hours = 8760 # 1 year
+
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+}
+
 resource "google_compute_ssl_certificate" "self_signed" {
   name_prefix = "rag-self-signed-${var.env}-"
   project     = var.project_id
-  private_key = file("${path.module}/self-signed.key")
-  certificate = file("${path.module}/self-signed.crt")
+  private_key = tls_private_key.self_signed.private_key_pem
+  certificate = tls_self_signed_cert.self_signed.cert_pem
 
   lifecycle {
     create_before_destroy = true
