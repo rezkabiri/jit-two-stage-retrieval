@@ -95,7 +95,7 @@ resource "google_cloud_run_v2_service" "agent" {
       }
       env {
         name  = "GOOGLE_GENAI_USE_VERTEXAI"
-        value = tostring(var.use_vertex_ai)
+        value = var.use_vertex_ai ? "True" : "False"
       }
       env {
         name = "GOOGLE_API_KEY"

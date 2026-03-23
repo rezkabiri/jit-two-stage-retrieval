@@ -14,13 +14,17 @@ AI_STUDIO_MODEL = os.getenv("AI_STUDIO_MODEL", "gemini-2.0-flash")
 VERTEX_AI_MODEL = os.getenv("VERTEX_AI_MODEL", "gemini-2.0-flash")
 
 if USE_VERTEX_AI:
-    # Force Vertex AI routing by ensuring the API Key is NOT in the environment.
-    # When GOOGLE_API_KEY is present, the SDK often defaults to AI Studio.
+    # Force Vertex AI routing for the google-genai SDK.
+    # We set GOOGLE_GENAI_USE_VERTEXAI to "True" (capitalized) which is the standard signal for the SDK.
+    os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
+    
+    # Ensure the API Key is NOT in the environment.
+    # When GOOGLE_API_KEY is present, the SDK often defaults to AI Studio even if Vertex is requested.
     if "GOOGLE_API_KEY" in os.environ:
         del os.environ["GOOGLE_API_KEY"]
     
     MODEL_NAME = VERTEX_AI_MODEL
-    print(f"🔗 Model Backend: Vertex AI ({VERTEX_AI_MODEL})")
+    print(f"🔗 Model Backend: Vertex AI ({VERTEX_AI_MODEL}) | Project: {os.getenv('GOOGLE_CLOUD_PROJECT')} | Location: {os.getenv('GOOGLE_CLOUD_LOCATION')}")
 else:
     MODEL_NAME = AI_STUDIO_MODEL
     print(f"🔗 Model Backend: AI Studio ({AI_STUDIO_MODEL})")
