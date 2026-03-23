@@ -64,25 +64,27 @@ def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict
     try:
         response = client.search(search_request)
         results = []
+        print(f"🔍 Stage 1 Retrieval: Found {len(response.results)} candidates for query: '{query}' with filter: '{role_filter}'")
+        
         for result in response.results:
             doc = result.document
             derived = doc.derived_struct_data or {}
             
-            # 1. Try Extractive Answers (highest quality)
+            # ... (rest of the extraction logic)
             snippet = ""
             extractive_answers = derived.get("extractive_answers", [])
             if extractive_answers:
                 snippet = extractive_answers[0].get("content", "")
             
-            # 2. Fallback to Snippets
             if not snippet:
                 snippets = derived.get("snippets", [])
                 if snippets:
                     snippet = snippets[0].get("snippet", "")
             
-            # 3. Fallback to Struct Data if snippet is still empty
             if not snippet and doc.struct_data:
                 snippet = doc.struct_data.get("content", "")[:500]
+
+            print(f"  - Doc ID: {doc.id} | Title: {derived.get('title', 'Untitled')} | Snippet Length: {len(snippet)}")
 
             results.append({
                 "id": doc.id,
