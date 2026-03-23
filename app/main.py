@@ -1,7 +1,30 @@
 # app/main.py
 import os
-import sys
 import logging
+
+# Configure logging early
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# --- CRITICAL: Vertex AI Environment Setup ---
+# This MUST happen before any google.adk or google.genai imports to ensure the SDK
+# picks up the correct backend and regional location.
+USE_VERTEX_AI = os.getenv("USE_VERTEX_AI", "true").lower() == "true"
+if USE_VERTEX_AI:
+    os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
+    # Force a regional location for the LLM. 
+    # DATA_STORE_LOCATION (usually 'global') is handled separately in tools.
+    llm_location = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+    if llm_location == "global":
+        llm_location = "us-central1"
+    os.environ["GOOGLE_CLOUD_LOCATION"] = llm_location
+    
+    # Remove API Key to prevent defaulting to AI Studio
+    if "GOOGLE_API_KEY" in os.environ:
+        del os.environ["GOOGLE_API_KEY"]
+    
+    logger.info(f"🔗 Global Setup: Vertex AI mode enabled. Location: {llm_location}")
+
 import hashlib
 from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
 from pydantic import BaseModel
@@ -10,10 +33,6 @@ from google.adk.sessions import InMemorySessionService
 from google.genai import types
 from app.agent import root_agent
 from app.tools.feedback import record_feedback, record_conversation
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 logger.info("🚀 STARTING AGENT SERVICE")
 
