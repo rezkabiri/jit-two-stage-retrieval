@@ -24,7 +24,7 @@ This agent is built using the Google Agent Development Kit (ADK) and follows the
     -   Respect identity-based access; never attempt to bypass the filtering logic.
 
 ## Technical Configuration
--   **Model**: `gemini-2.0-flash`
+-   **Model**: `gemini-2.0-flash-001`
 -   **Location**: `us-east4` (for Vertex AI backend access)
 -   **Stage 1 Tool**: `stage_1_retrieval`
 -   **Stage 2 Tool**: `rerank_documents` (Vertex AI Ranking API)
