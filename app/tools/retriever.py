@@ -7,7 +7,9 @@ from app.roles import get_user_roles
 
 # Configuration (normally loaded from environment variables)
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
-LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+# Data Store location is typically "global", while Gemini models are regional.
+# We use DATA_STORE_LOCATION for the retriever and GOOGLE_CLOUD_LOCATION for the LLM.
+LOCATION = os.getenv("DATA_STORE_LOCATION") or os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
 DATA_STORE_ID = os.getenv("DATA_STORE_ID")
 
 @tool

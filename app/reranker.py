@@ -108,7 +108,8 @@ class Reranker:
 
 # Global instance for tool use
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
-LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+# Use the same logic as the retriever: prioritize DATA_STORE_LOCATION for Vertex AI Search/Ranking
+LOCATION = os.getenv("DATA_STORE_LOCATION") or os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
 _reranker_instance = Reranker(project_id=PROJECT_ID, location=LOCATION)
 
 @tool
