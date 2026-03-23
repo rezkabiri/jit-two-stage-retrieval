@@ -18,13 +18,20 @@ if USE_VERTEX_AI:
     # We set GOOGLE_GENAI_USE_VERTEXAI to "True" (capitalized) which is the standard signal for the SDK.
     os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
     
+    # Vertex AI Gemini models MUST use a regional location (e.g., us-central1).
+    # If the provided location is "global" (often used for Search), we override it for the LLM.
+    llm_location = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+    if llm_location == "global":
+        llm_location = "us-central1"
+    os.environ["GOOGLE_CLOUD_LOCATION"] = llm_location
+    
     # Ensure the API Key is NOT in the environment.
     # When GOOGLE_API_KEY is present, the SDK often defaults to AI Studio even if Vertex is requested.
     if "GOOGLE_API_KEY" in os.environ:
         del os.environ["GOOGLE_API_KEY"]
     
     MODEL_NAME = VERTEX_AI_MODEL
-    print(f"🔗 Model Backend: Vertex AI ({VERTEX_AI_MODEL}) | Project: {os.getenv('GOOGLE_CLOUD_PROJECT')} | Location: {os.getenv('GOOGLE_CLOUD_LOCATION')}")
+    print(f"🔗 Model Backend: Vertex AI ({VERTEX_AI_MODEL}) | Project: {os.getenv('GOOGLE_CLOUD_PROJECT')} | Location: {llm_location}")
 else:
     MODEL_NAME = AI_STUDIO_MODEL
     print(f"🔗 Model Backend: AI Studio ({AI_STUDIO_MODEL})")
