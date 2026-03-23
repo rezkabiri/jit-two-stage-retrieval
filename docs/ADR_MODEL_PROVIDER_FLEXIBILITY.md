@@ -14,8 +14,8 @@ We decided to implement a **flexible model provider switch** (backend toggle) th
 
 ### Key Components:
 1.  **`USE_VERTEX_AI` (Toggle)**: A boolean flag that determines the primary model backend. When `true`, the system routes requests to Vertex AI. When `false`, it defaults to AI Studio.
-2.  **`VERTEX_AI_MODEL` / `AI_STUDIO_MODEL` (Configuration)**: Independent environment variables that specify which model to use for each provider. This allows us to point the system to a specific versioned model (e.g., `gemini-1.5-pro-002`) or an unversioned alias (e.g., `gemini-2.0-flash-001`).
-3.  **Environment-Based Routing**: The backend switch is handled by the `GOOGLE_GENAI_USE_VERTEXAI` environment variable (recognized by the underlying SDK). This allows the application to use clean model identifiers (e.g., `gemini-2.0-flash-001`) while dynamically routing to the appropriate provider.
+2.  **`VERTEX_AI_MODEL` / `AI_STUDIO_MODEL` (Configuration)**: Independent environment variables that specify which model to use for each provider. This allows us to point the system to a specific versioned model (e.g., `gemini-1.5-pro-002`) or an unversioned alias (e.g., `gemini-2.5-pro`).
+3.  **Environment-Based Routing**: The backend switch is handled by the `GOOGLE_GENAI_USE_VERTEXAI` environment variable (recognized by the underlying SDK). This allows the application to use clean model identifiers (e.g., `gemini-2.5-pro`) while dynamically routing to the appropriate provider.
 
 ## Consequence
 - **Resilience**: If a specific model or backend encounters quota exhaustion or availability issues, the operator can switch backends via a simple environment variable change without rebuilding the container.
@@ -27,5 +27,5 @@ We decided to implement a **flexible model provider switch** (backend toggle) th
 - **Agent Layer**: Initialized in `app/agent.py` through dynamic `MODEL_NAME` construction.
 - **Default Values**:
     - `USE_VERTEX_AI`: `true`
-    - `VERTEX_AI_MODEL`: `gemini-2.0-flash-001`
-    - `AI_STUDIO_MODEL`: `gemini-2.0-flash-001`
+    - `VERTEX_AI_MODEL`: `gemini-2.5-pro`
+    - `AI_STUDIO_MODEL`: `gemini-2.5-pro`

@@ -25,12 +25,12 @@ variable "use_vertex_ai" {
 
 variable "ai_studio_model" {
   type        = string
-  default     = "gemini-2.0-flash-001"
+  default     = "gemini-2.5-pro"
 }
 
 variable "vertex_ai_model" {
   type        = string
-  default     = "gemini-2.0-flash-001"
+  default     = "gemini-2.5-pro"
 }
 
 # 0. Fetch Project Info (to get project number for IAP Service Agent)
