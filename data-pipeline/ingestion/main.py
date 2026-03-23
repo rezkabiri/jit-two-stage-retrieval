@@ -36,7 +36,16 @@ def process_gcs_upload(cloud_event):
     metadata = map_rbac_roles(file_name)
     print(f"🏷️ Assigned RBAC metadata: {json.dumps(metadata)}")
 
-    # 2. Push to Vertex AI Search using URI
+    # 2. Determine MIME Type
+    mime_type = "text/plain"
+    if file_name.lower().endswith(".pdf"):
+        mime_type = "application/pdf"
+    elif file_name.lower().endswith(".md"):
+        mime_type = "text/markdown"
+    elif file_name.lower().endswith(".txt"):
+        mime_type = "text/plain"
+
+    # 3. Push to Vertex AI Search using URI
     parent = search_client.branch_path(
         project=PROJECT_ID,
         location=LOCATION,
@@ -52,7 +61,7 @@ def process_gcs_upload(cloud_event):
         id=doc_id,
         content=discoveryengine.Document.Content(
             uri=gcs_uri,
-            mime_type="text/plain"
+            mime_type=mime_type
         ),
         struct_data=metadata
     )

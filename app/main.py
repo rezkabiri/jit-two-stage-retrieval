@@ -60,11 +60,15 @@ async def chat(request: ChatRequest, fast_request: Request, background_tasks: Ba
         # Generate a stable session ID for the user
         session_id = hashlib.md5(user_email.encode()).hexdigest()
         
+        # Inject the user's identity into the query context for the agent
+        user_context = f"[USER IDENTITY: {user_email}]\n\n"
+        full_query = user_context + request.query
+
         response_text = ""
         async for event in runner.run_async(
             user_id=user_email,
             session_id=session_id,
-            new_message=types.Content(role="user", parts=[types.Part.from_text(text=request.query)])
+            new_message=types.Content(role="user", parts=[types.Part.from_text(text=full_query)])
         ):
             if event.is_final_response():
                 response_text = event.content.parts[0].text

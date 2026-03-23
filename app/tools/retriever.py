@@ -43,12 +43,22 @@ def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict
     role_list = ", ".join([f'"{r}"' for r in roles])
     role_filter = f"role: ANY({role_list})"
     
-    # Stage 1: Initial Retrieval
+    # Stage 1: Initial Retrieval with Content Search Spec for better snippets
+    content_search_spec = discoveryengine.SearchRequest.ContentSearchSpec(
+        snippet_spec=discoveryengine.SearchRequest.ContentSearchSpec.SnippetSpec(
+            return_snippet=True
+        ),
+        extractive_content_spec=discoveryengine.SearchRequest.ContentSearchSpec.ExtractiveContentSpec(
+            max_extractive_answer_count=1
+        )
+    )
+
     search_request = discoveryengine.SearchRequest(
         serving_config=serving_config,
         query=query,
         page_size=10, 
         filter=role_filter,
+        content_search_spec=content_search_spec,
     )
 
     try:
@@ -57,11 +67,28 @@ def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict
         for result in response.results:
             doc = result.document
             derived = doc.derived_struct_data or {}
+            
+            # 1. Try Extractive Answers (highest quality)
+            snippet = ""
+            extractive_answers = derived.get("extractive_answers", [])
+            if extractive_answers:
+                snippet = extractive_answers[0].get("content", "")
+            
+            # 2. Fallback to Snippets
+            if not snippet:
+                snippets = derived.get("snippets", [])
+                if snippets:
+                    snippet = snippets[0].get("snippet", "")
+            
+            # 3. Fallback to Struct Data if snippet is still empty
+            if not snippet and doc.struct_data:
+                snippet = doc.struct_data.get("content", "")[:500]
+
             results.append({
                 "id": doc.id,
-                "title": derived.get("title", "Untitled"),
-                "snippet": derived.get("snippets", [{}])[0].get("snippet", "") if derived.get("snippets") else "",
-                "link": derived.get("link", ""),
+                "title": derived.get("title", doc.struct_data.get("title", "Untitled")),
+                "snippet": snippet,
+                "link": derived.get("link", doc.struct_data.get("source_path", "")),
                 "metadata": dict(doc.struct_data) if doc.struct_data else {}
             })
             
