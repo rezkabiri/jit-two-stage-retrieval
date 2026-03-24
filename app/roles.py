@@ -26,6 +26,7 @@ class RoleManager:
         Maps a user email to a list of roles.
         """
         if not user_email or user_email == "anonymous":
+            logger.info("👤 Identity: Anonymous | Role: ['public']")
             return ["public"]
 
         # 1. Check for exact match in mapping config
@@ -33,22 +34,27 @@ class RoleManager:
             roles = self.role_mapping[user_email]
             if "public" not in roles:
                 roles.append("public")
+            logger.info(f"👤 Identity: {user_email} | Method: Mapping Config | Roles: {roles}")
             return roles
 
         # 2. Fallback to domain-based or hardcoded rules
         roles = ["public"]
+        method = "Default"
         
         # Domain-based rules
         if user_email.endswith("@finance.com"):
             roles.append("finance")
+            method = "Domain (Finance)"
         elif user_email.endswith("@legal.com"):
             roles.append("legal")
+            method = "Domain (Legal)"
         elif user_email == "admin@bank.com" or user_email == "admin@rkabiri.altostrat.com":
-            roles.append("finance")
-            roles.append("admin")
-            roles.append("internal")
+            roles.extend(["finance", "admin", "internal"])
+            method = "Hardcoded Admin"
             
-        return list(set(roles))
+        final_roles = list(set(roles))
+        logger.info(f"👤 Identity: {user_email} | Method: {method} | Roles: {final_roles}")
+        return final_roles
 
 # Singleton instance
 ROLE_CONFIG_PATH = os.getenv("ROLE_MAPPING_CONFIG_PATH")

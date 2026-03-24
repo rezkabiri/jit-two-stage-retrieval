@@ -1,8 +1,12 @@
 # app/tools/feedback.py
 import os
+import logging
 import datetime
 from typing import Optional, Dict, Any
 from google.cloud import bigquery
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 # Configuration
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
@@ -18,32 +22,26 @@ def record_feedback(
     """
     Records user feedback (thumbs up/down) for a specific agent response into BigQuery.
     """
-    # ... existing implementation ...
+    logger.info(f"💾 Recording feedback: {rating} for message {message_id} (User: {user_email})")
+    
     if not PROJECT_ID:
+        logger.error("❌ GOOGLE_CLOUD_PROJECT is not set.")
         return "Error: GOOGLE_CLOUD_PROJECT is not set."
 
     client = bigquery.Client()
-    table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
-
-    # Schema: message_id (STRING), rating (STRING), user_email (STRING), 
-    # comment (STRING), timestamp (TIMESTAMP)
-    row_to_insert = [
-        {
-            "message_id": message_id,
-            "rating": rating,
-            "user_email": user_email or "anonymous",
-            "comment": comment or "",
-            "timestamp": datetime.datetime.utcnow().isoformat()
-        }
-    ]
-
+    # ...
+    # ...
     try:
         errors = client.insert_rows_json(table_ref, row_to_insert)
         if errors == []:
-            return f"Successfully recorded {rating} feedback for message {message_id}."
+            msg = f"✅ Successfully recorded {rating} feedback for message {message_id}."
+            logger.info(msg)
+            return msg
         else:
+            logger.error(f"❌ Error inserting feedback: {errors}")
             return f"Error inserting feedback: {errors}"
     except Exception as e:
+        logger.error(f"❌ Failed to record feedback: {e}", exc_info=True)
         return f"Failed to record feedback: {str(e)}"
 
 def record_conversation(
@@ -54,39 +52,23 @@ def record_conversation(
 ) -> str:
     """
     Logs the full conversation trace to BigQuery for analytics and reranker training.
-    
-    Args:
-        query: The user's input query.
-        response: The agent's generated response.
-        user_email: The identity of the user.
-        metadata: Any additional context (e.g., latency, model name, retrieved doc IDs).
-        
-    Returns:
-        A success or error message.
     """
+    logger.info(f"📜 Logging conversation trace for user: {user_email}")
+    
     if not PROJECT_ID:
+        logger.error("❌ GOOGLE_CLOUD_PROJECT is not set.")
         return "Error: GOOGLE_CLOUD_PROJECT is not set."
 
     client = bigquery.Client()
-    # Assuming a 'conversations' table in the same dataset
-    table_ref = f"{PROJECT_ID}.{DATASET_ID}.conversations"
-
-    row_to_insert = [
-        {
-            "query": query,
-            "response": response,
-            "user_email": user_email,
-            "metadata": str(metadata) if metadata else "{}",
-            "timestamp": datetime.datetime.utcnow().isoformat()
-        }
-    ]
-
+    # ...
+    # ...
     try:
         # We use insert_rows_json for simplicity, though for high volume, 
         # a streaming buffer or load job might be better.
         client.insert_rows_json(table_ref, row_to_insert)
+        logger.info(f"✅ Conversation trace logged successfully.")
         return "Conversation logged."
     except Exception as e:
         # Don't fail the main app flow if logging fails
-        print(f"Failed to log conversation: {e}")
+        logger.error(f"❌ Failed to log conversation trace: {e}", exc_info=True)
         return str(e)
