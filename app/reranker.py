@@ -19,11 +19,11 @@ class Reranker:
         self.location = location
         
         if not project_id:
-            print("⚠️ Reranker: PROJECT_ID not set. Reranking will be disabled.")
+            logger.warning("⚠️ Reranker: PROJECT_ID not set. Reranking will be disabled.")
             self.client = None
             return
 
-        print(f"🚀 Initializing Vertex AI Reranker for project: {project_id}")
+        logger.info(f"🚀 Initializing Vertex AI Reranker for project: {project_id}")
         
         # Resolve the correct API endpoint based on location
         client_options = None

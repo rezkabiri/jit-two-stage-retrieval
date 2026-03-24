@@ -10,7 +10,22 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # --- CRITICAL: Vertex AI Environment Setup ---
-# ... (rest of the setup logic)
+# This MUST happen before any google.adk or google.genai imports to ensure the SDK
+# picks up the correct backend and regional location.
+USE_VERTEX_AI = os.getenv("USE_VERTEX_AI", "true").lower() == "true"
+if USE_VERTEX_AI:
+    os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
+    # Force a regional location for the LLM. 
+    # DATA_STORE_LOCATION (usually 'global') is handled separately in tools.
+    llm_location = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+    if llm_location == "global":
+        llm_location = "us-central1"
+    os.environ["GOOGLE_CLOUD_LOCATION"] = llm_location
+    
+    # Remove API Key to prevent defaulting to AI Studio
+    if "GOOGLE_API_KEY" in os.environ:
+        del os.environ["GOOGLE_API_KEY"]
+    
     logger.info(f"🔗 Global Setup: Vertex AI mode enabled. Location: {llm_location}")
 
 import hashlib
@@ -26,7 +41,8 @@ logger.info("🚀 STARTING AGENT SERVICE")
 
 app = FastAPI()
 
-# ... (Runner initialization)
+# Initialize ADK Runner and Session Service
+session_service = InMemorySessionService()
 runner = Runner(agent=root_agent, app_name="rag-app", session_service=session_service, auto_create_session=True)
 
 class ChatRequest(BaseModel):
@@ -46,7 +62,7 @@ async def chat(request: ChatRequest, fast_request: Request, background_tasks: Ba
     logger.info(f"📩 Incoming chat request from {user_email}: {request.query[:100]}...")
 
     try:
-        # ... (session and context logic)
+        # Generate a stable session ID for the user
         session_id = hashlib.md5(user_email.encode()).hexdigest()
         
         # Inject the user's identity into the query context for the agent

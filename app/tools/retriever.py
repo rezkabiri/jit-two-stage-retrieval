@@ -78,7 +78,7 @@ def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict
             doc = result.document
             derived = doc.derived_struct_data or {}
             
-            # ... (rest of the extraction logic)
+            # Extract content from various sources
             snippet = ""
             extractive_answers = derived.get("extractive_answers", [])
             if extractive_answers:

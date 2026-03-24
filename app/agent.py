@@ -1,24 +1,27 @@
 # app/agent.py
 import os
+import logging
 from google.adk.agents import Agent, SequentialAgent
 from app.tools.retriever import stage_1_retrieval
 from app.reranker import rerank_documents
 
-print("🚀 Initializing Agent module...")
+logger = logging.getLogger(__name__)
+
+logger.info("🚀 Initializing Agent module...")
 
 # Configuration Switch: Vertex AI vs AI Studio
 # Set USE_VERTEX_AI=true to use Vertex AI Model Garden (default for reliability)
 # Set USE_VERTEX_AI=false to use AI Studio (Gemini API)
 USE_VERTEX_AI = os.getenv("USE_VERTEX_AI", "true").lower() == "true"
-AI_STUDIO_MODEL = os.getenv("AI_STUDIO_MODEL", "gemini-2.5-pro")
-VERTEX_AI_MODEL = os.getenv("VERTEX_AI_MODEL", "gemini-2.5-pro")
+AI_STUDIO_MODEL = os.getenv("AI_STUDIO_MODEL", "gemini-1.5-pro-002")
+VERTEX_AI_MODEL = os.getenv("VERTEX_AI_MODEL", "gemini-1.5-pro-002")
 
 if USE_VERTEX_AI:
     MODEL_NAME = VERTEX_AI_MODEL
-    print(f"🔗 Model Backend: Vertex AI ({VERTEX_AI_MODEL}) | Project: {os.getenv('GOOGLE_CLOUD_PROJECT')} | Location: {os.getenv('GOOGLE_CLOUD_LOCATION')}")
+    logger.info(f"🔗 Model Backend: Vertex AI ({VERTEX_AI_MODEL}) | Project: {os.getenv('GOOGLE_CLOUD_PROJECT')} | Location: {os.getenv('GOOGLE_CLOUD_LOCATION')}")
 else:
     MODEL_NAME = AI_STUDIO_MODEL
-    print(f"🔗 Model Backend: AI Studio ({AI_STUDIO_MODEL})")
+    logger.info(f"🔗 Model Backend: AI Studio ({AI_STUDIO_MODEL})")
 
 
 def create_rag_agent():
@@ -56,4 +59,4 @@ def create_rag_agent():
 # Use a single robust agent for the RAG journey
 root_agent = create_rag_agent()
 
-print("✅ Agent module initialized with unified RAG agent.")
+logger.info("✅ Agent module initialized with unified RAG agent.")
