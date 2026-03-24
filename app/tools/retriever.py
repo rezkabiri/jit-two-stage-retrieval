@@ -1,9 +1,12 @@
 # app/tools/retriever.py
 import os
+import logging
 from typing import List, Optional
 from google.cloud import discoveryengine_v1beta as discoveryengine
 from google.adk.tools import FunctionTool as tool
 from app.roles import get_user_roles
+
+logger = logging.getLogger(__name__)
 
 # Configuration (normally loaded from environment variables)
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
@@ -69,7 +72,7 @@ def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict
     try:
         response = client.search(search_request)
         results = []
-        print(f"🔍 Stage 1 Retrieval: Found {len(response.results)} candidates for query: '{query}' with filter: '{role_filter}'")
+        logger.info(f"🔍 Stage 1 Retrieval: Found {len(response.results)} candidates for query: '{query}' with filter: '{role_filter}'")
         
         for result in response.results:
             doc = result.document
@@ -89,7 +92,7 @@ def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict
             if not snippet and doc.struct_data:
                 snippet = doc.struct_data.get("content", "")[:500]
 
-            print(f"  - Doc ID: {doc.id} | Title: {derived.get('title', 'Untitled')} | Snippet Length: {len(snippet)}")
+            logger.info(f"  - Doc ID: {doc.id} | Title: {derived.get('title', 'Untitled')} | Snippet Length: {len(snippet)}")
 
             results.append({
                 "id": doc.id,
@@ -101,5 +104,5 @@ def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict
             
         return results
     except Exception as e:
-        print(f"❌ Retrieval tool error: {e}")
+        logger.error(f"❌ Retrieval tool error: {e}", exc_info=True)
         return [{"error": str(e)}]

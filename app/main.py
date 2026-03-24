@@ -3,26 +3,14 @@ import os
 import logging
 
 # Configure logging early
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(levelname)s:%(name)s:%(message)s'
+)
 logger = logging.getLogger(__name__)
 
 # --- CRITICAL: Vertex AI Environment Setup ---
-# This MUST happen before any google.adk or google.genai imports to ensure the SDK
-# picks up the correct backend and regional location.
-USE_VERTEX_AI = os.getenv("USE_VERTEX_AI", "true").lower() == "true"
-if USE_VERTEX_AI:
-    os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
-    # Force a regional location for the LLM. 
-    # DATA_STORE_LOCATION (usually 'global') is handled separately in tools.
-    llm_location = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
-    if llm_location == "global":
-        llm_location = "us-central1"
-    os.environ["GOOGLE_CLOUD_LOCATION"] = llm_location
-    
-    # Remove API Key to prevent defaulting to AI Studio
-    if "GOOGLE_API_KEY" in os.environ:
-        del os.environ["GOOGLE_API_KEY"]
-    
+# ... (rest of the setup logic)
     logger.info(f"🔗 Global Setup: Vertex AI mode enabled. Location: {llm_location}")
 
 import hashlib
@@ -38,8 +26,7 @@ logger.info("🚀 STARTING AGENT SERVICE")
 
 app = FastAPI()
 
-# Initialize ADK Runner and Session Service
-session_service = InMemorySessionService()
+# ... (Runner initialization)
 runner = Runner(agent=root_agent, app_name="rag-app", session_service=session_service, auto_create_session=True)
 
 class ChatRequest(BaseModel):
@@ -56,8 +43,10 @@ async def chat(request: ChatRequest, fast_request: Request, background_tasks: Ba
     if ":" in user_email:
         user_email = user_email.split(":")[-1]
 
+    logger.info(f"📩 Incoming chat request from {user_email}: {request.query[:100]}...")
+
     try:
-        # Generate a stable session ID for the user
+        # ... (session and context logic)
         session_id = hashlib.md5(user_email.encode()).hexdigest()
         
         # Inject the user's identity into the query context for the agent
@@ -72,6 +61,8 @@ async def chat(request: ChatRequest, fast_request: Request, background_tasks: Ba
         ):
             if event.is_final_response():
                 response_text = event.content.parts[0].text
+        
+        logger.info(f"✅ Generated response for {user_email} (Length: {len(response_text)})")
             
         background_tasks.add_task(
             record_conversation, 
@@ -82,7 +73,7 @@ async def chat(request: ChatRequest, fast_request: Request, background_tasks: Ba
         
         return {"response": response_text}
     except Exception as e:
-        logger.error(f"Error during chat: {e}", exc_info=True)
+        logger.error(f"❌ Error during chat: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/feedback")
