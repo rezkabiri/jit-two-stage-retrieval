@@ -6,10 +6,11 @@ A high-performance, production-grade Agentic RAG solution on Google Cloud Platfo
 
 ```mermaid
 graph LR
-    User --> Agent[ADK Agent]
-    Agent --> Stage1[Vertex AI Search]
-    Stage1 --> Stage2[Vertex AI Ranking API]
-    Stage2 --> Response[Grounded Answer]
+    User --> Agent[Unified RAG Agent]
+    Agent --> Search[Vertex AI Search]
+    Agent --> Rank[Vertex AI Ranking API]
+    Rank --> Agent
+    Agent --> Response[Grounded Answer]
 ```
 
 - **Two-Stage Retrieval**: Stage 1 (Fast Retrieval via Vertex AI Search) + Stage 2 (Deep Reasoning & Reranking via ADK Agent).
@@ -42,6 +43,7 @@ graph TD
         direction LR
         CB --> Docker[Docker Build]
         CB --> Unit[Agent Unit Tests]
+        CB --> Security[Security Isolation]
         CB --> ETL[ETL Parser Tests]
         CB --> TF[Terraform Validate]
     end

@@ -77,6 +77,17 @@ steps:
         python3 -m pytest data-pipeline/tests/
     waitFor: ['-'] # Start immediately
 
+  - name: 'python:3.11'
+    id: 'test-security-isolation'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        pip install -r app/requirements.txt pytest --quiet
+        export PYTHONPATH=$$PYTHONPATH:$$(pwd)
+        python3 -m pytest tests/security/
+    waitFor: ['-'] # Start immediately
+
   - name: 'hashicorp/terraform:latest'
     id: 'validate-terraform'
     entrypoint: 'sh'
@@ -101,7 +112,7 @@ steps:
           --region=${_REGION} \
           --platform=managed \
           --no-allow-unauthenticated
-    waitFor: ['test-agent-core', 'test-ingestion-pipeline', 'validate-terraform', 'push-images-staging']
+    waitFor: ['test-agent-core', 'test-ingestion-pipeline', 'test-security-isolation', 'validate-terraform', 'push-images-staging']
 
 
   # --- STAGE 3: EVALUATION GATE ---
