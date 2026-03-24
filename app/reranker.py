@@ -40,7 +40,7 @@ class Reranker:
         self.client = discoveryengine.RankServiceClient(client_options={"api_endpoint": endpoint})
         self.ranking_config = self.client.ranking_config_path(
             project=project_id,
-            location=location,
+            location=canonical_location,
             ranking_config="default_ranking_config",
         )
 

@@ -40,10 +40,11 @@ def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict
     client_options = {"api_endpoint": endpoint}
     client = discoveryengine.SearchServiceClient(client_options=client_options)
     
-    # Define the serving config path using the original LOCATION for resource mapping
+    # Define the serving config path using the CANONICAL_LOCATION for resource mapping
+    # This must match the API endpoint's region.
     serving_config = client.serving_config_path(
         project=PROJECT_ID,
-        location=LOCATION,
+        location=CANONICAL_LOCATION,
         data_store=DATA_STORE_ID,
         serving_config="default_config",
     )
