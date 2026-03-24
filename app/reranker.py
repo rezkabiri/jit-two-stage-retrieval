@@ -27,8 +27,12 @@ class Reranker:
         
         # Resolve the correct API endpoint based on location
         client_options = None
-        if location != "global":
+        if location in ["us", "eu"]:
             client_options = {"api_endpoint": f"{location}-discoveryengine.googleapis.com"}
+        elif location != "global":
+            # Regional locations for the Ranking API usually map to multi-regions 
+            # like 'us' or 'eu', or we use the 'global' endpoint.
+            client_options = {"api_endpoint": "discoveryengine.googleapis.com"}
             
         self.client = discoveryengine.RankServiceClient(client_options=client_options)
         self.ranking_config = self.client.ranking_config_path(

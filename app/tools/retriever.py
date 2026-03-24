@@ -32,9 +32,16 @@ def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict
         return [{"error": "GOOGLE_CLOUD_PROJECT is not set."}]
 
     # Resolve the correct API endpoint based on location
+    # Valid endpoints are discoveryengine.googleapis.com (global), 
+    # us-discoveryengine.googleapis.com, or eu-discoveryengine.googleapis.com.
     client_options = None
-    if LOCATION != "global":
+    if LOCATION in ["us", "eu"]:
         client_options = {"api_endpoint": f"{LOCATION}-discoveryengine.googleapis.com"}
+    elif LOCATION != "global":
+        # If a specific region like us-central1 is provided, we often still need 
+        # to use the 'global' or 'us'/'eu' multi-region endpoint for the API.
+        # Since our data store is 'global', we default to global.
+        client_options = {"api_endpoint": "discoveryengine.googleapis.com"}
     
     client = discoveryengine.SearchServiceClient(client_options=client_options)
     
