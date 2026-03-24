@@ -33,7 +33,6 @@ else:
     CANONICAL_LOCATION = "global"
 
 # Override: If the Data Store is known to be global (as in this infra), force global.
-# We'll stick to the environment variable or default to global.
 if os.getenv("DATA_STORE_LOCATION") == "global":
     CANONICAL_LOCATION = "global"
 
@@ -54,7 +53,6 @@ def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict
     client = discoveryengine.SearchServiceClient(client_options=client_options)
     
     # Define the serving config path
-    # NOTE: location must match where the Data Store was created (global in this repo).
     serving_config = client.serving_config_path(
         project=PROJECT_ID,
         location=CANONICAL_LOCATION,
@@ -70,12 +68,11 @@ def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict
     role_filter = f"role: ANY({role_list})"
     
     # Stage 1: Initial Retrieval
+    # NOTE: We avoid extractive_content_spec because it requires Enterprise Edition.
+    # snippet_spec is available in Standard Edition.
     content_search_spec = discoveryengine.SearchRequest.ContentSearchSpec(
         snippet_spec=discoveryengine.SearchRequest.ContentSearchSpec.SnippetSpec(
             return_snippet=True
-        ),
-        extractive_content_spec=discoveryengine.SearchRequest.ContentSearchSpec.ExtractiveContentSpec(
-            max_extractive_answer_count=1
         )
     )
 
@@ -96,17 +93,14 @@ def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict
             doc = result.document
             derived = doc.derived_struct_data or {}
             
+            # Extract content from snippets (Standard Edition)
             snippet = ""
-            extractive_answers = derived.get("extractive_answers", [])
-            if extractive_answers:
-                snippet = extractive_answers[0].get("content", "")
-            
-            if not snippet:
-                snippets = derived.get("snippets", [])
-                if snippets:
-                    snippet = snippets[0].get("snippet", "")
+            snippets = derived.get("snippets", [])
+            if snippets:
+                snippet = snippets[0].get("snippet", "")
             
             if not snippet and doc.struct_data:
+                # Fallback to struct data content if available
                 snippet = doc.struct_data.get("content", "")[:500]
 
             logger.info(f"  - Doc ID: {doc.id} | Title: {derived.get('title', 'Untitled')}")
