@@ -50,10 +50,10 @@ variable "use_vertex_ai" {
 
 variable "ai_studio_model" {
   type        = string
-  default     = "gemini-1.5-pro-002"
+  default     = "gemini-2.5-pro"
 }
 
 variable "vertex_ai_model" {
   type        = string
-  default     = "gemini-1.5-pro-002"
+  default     = "gemini-2.5-pro"
 }
