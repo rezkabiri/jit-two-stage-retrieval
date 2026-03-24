@@ -24,7 +24,13 @@ class Reranker:
             return
 
         print(f"🚀 Initializing Vertex AI Reranker for project: {project_id}")
-        self.client = discoveryengine.RankServiceClient()
+        
+        # Resolve the correct API endpoint based on location
+        client_options = None
+        if location != "global":
+            client_options = {"api_endpoint": f"{location}-discoveryengine.googleapis.com"}
+            
+        self.client = discoveryengine.RankServiceClient(client_options=client_options)
         self.ranking_config = self.client.ranking_config_path(
             project=project_id,
             location=location,

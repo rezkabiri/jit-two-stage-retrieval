@@ -28,7 +28,12 @@ def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict
     if not PROJECT_ID:
         return [{"error": "GOOGLE_CLOUD_PROJECT is not set."}]
 
-    client = discoveryengine.SearchServiceClient()
+    # Resolve the correct API endpoint based on location
+    client_options = None
+    if LOCATION != "global":
+        client_options = {"api_endpoint": f"{LOCATION}-discoveryengine.googleapis.com"}
+    
+    client = discoveryengine.SearchServiceClient(client_options=client_options)
     
     # Define the serving config path
     serving_config = client.serving_config_path(
