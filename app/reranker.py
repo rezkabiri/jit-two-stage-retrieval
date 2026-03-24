@@ -25,16 +25,19 @@ class Reranker:
 
         logger.info(f"🚀 Initializing Vertex AI Reranker for project: {project_id}")
         
-        # Resolve the correct API endpoint based on location
-        client_options = None
-        if location in ["us", "eu"]:
-            client_options = {"api_endpoint": f"{location}-discoveryengine.googleapis.com"}
-        elif location != "global":
-            # Regional locations for the Ranking API usually map to multi-regions 
-            # like 'us' or 'eu', or we use the 'global' endpoint.
-            client_options = {"api_endpoint": "discoveryengine.googleapis.com"}
+        # Resolve canonical location for the API endpoint (global, us, or eu)
+        if location == "global" or location.startswith("us-"):
+            canonical_location = "global" if location == "global" else "us"
+        elif location.startswith("eu-"):
+            canonical_location = "eu"
+        else:
+            canonical_location = "global"
+
+        endpoint = "discoveryengine.googleapis.com"
+        if canonical_location in ["us", "eu"]:
+            endpoint = f"{canonical_location}-discoveryengine.googleapis.com"
             
-        self.client = discoveryengine.RankServiceClient(client_options=client_options)
+        self.client = discoveryengine.RankServiceClient(client_options={"api_endpoint": endpoint})
         self.ranking_config = self.client.ranking_config_path(
             project=project_id,
             location=location,

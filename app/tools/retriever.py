@@ -15,37 +15,32 @@ PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
 LOCATION = os.getenv("DATA_STORE_LOCATION") or os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
 DATA_STORE_ID = os.getenv("DATA_STORE_ID")
 
+# Resolve canonical location for the API endpoint
+# Vertex AI Search API endpoints must be global, us, or eu.
+if LOCATION == "global" or LOCATION.startswith("us-"):
+    CANONICAL_LOCATION = "global" if LOCATION == "global" else "us"
+elif LOCATION.startswith("eu-"):
+    CANONICAL_LOCATION = "eu"
+else:
+    CANONICAL_LOCATION = "global"
+
 @tool
 def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict]:
-    """
-    Performs the first stage retrieval from Vertex AI Search with RBAC filtering.
-    Always call this first when information is needed from the knowledge base.
-    
-    Args:
-        query: The user's search query.
-        user_email: The authenticated user's email for RBAC filtering (optional).
-        
-    Returns:
-        A list of retrieved document snippets and their metadata.
-    """
+    # ...
     if not PROJECT_ID:
         return [{"error": "GOOGLE_CLOUD_PROJECT is not set."}]
 
-    # Resolve the correct API endpoint based on location
+    # Resolve the correct API endpoint based on canonical location
     # Valid endpoints are discoveryengine.googleapis.com (global), 
     # us-discoveryengine.googleapis.com, or eu-discoveryengine.googleapis.com.
-    client_options = None
-    if LOCATION in ["us", "eu"]:
-        client_options = {"api_endpoint": f"{LOCATION}-discoveryengine.googleapis.com"}
-    elif LOCATION != "global":
-        # If a specific region like us-central1 is provided, we often still need 
-        # to use the 'global' or 'us'/'eu' multi-region endpoint for the API.
-        # Since our data store is 'global', we default to global.
-        client_options = {"api_endpoint": "discoveryengine.googleapis.com"}
+    endpoint = "discoveryengine.googleapis.com"
+    if CANONICAL_LOCATION in ["us", "eu"]:
+        endpoint = f"{CANONICAL_LOCATION}-discoveryengine.googleapis.com"
     
+    client_options = {"api_endpoint": endpoint}
     client = discoveryengine.SearchServiceClient(client_options=client_options)
     
-    # Define the serving config path
+    # Define the serving config path using the original LOCATION for resource mapping
     serving_config = client.serving_config_path(
         project=PROJECT_ID,
         location=LOCATION,
