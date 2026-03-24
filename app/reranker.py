@@ -16,7 +16,9 @@ class Reranker:
         Initialize the Vertex AI Ranking Service client.
         """
         self.project_id = project_id
-        self.location = location
+        
+        # Use DATA_STORE_LOCATION or default to "global" for Vertex Ranking API
+        self.location = os.getenv("DATA_STORE_LOCATION", "global")
         
         if not project_id:
             logger.warning("⚠️ Reranker: PROJECT_ID not set. Reranking will be disabled.")
@@ -26,9 +28,13 @@ class Reranker:
         logger.info(f"🚀 Initializing Vertex AI Reranker for project: {project_id}")
         
         # Resolve canonical location for the API endpoint (global, us, or eu)
-        if location == "global" or location.startswith("us-"):
-            canonical_location = "global" if location == "global" else "us"
-        elif location.startswith("eu-"):
+        if self.location == "global":
+            canonical_location = "global"
+        elif self.location in ["us", "eu"]:
+            canonical_location = self.location
+        elif self.location.startswith("us-"):
+            canonical_location = "us"
+        elif self.location.startswith("eu-"):
             canonical_location = "eu"
         else:
             canonical_location = "global"
@@ -37,6 +43,8 @@ class Reranker:
         if canonical_location in ["us", "eu"]:
             endpoint = f"{canonical_location}-discoveryengine.googleapis.com"
             
+        logger.info(f"📡 Using Rank API Endpoint: {endpoint} | Resource Location: {canonical_location}")
+
         self.client = discoveryengine.RankServiceClient(client_options={"api_endpoint": endpoint})
         self.ranking_config = self.client.ranking_config_path(
             project=project_id,
@@ -51,7 +59,6 @@ class Reranker:
             
         try:
             bq_client = bigquery.Client(project=self.project_id)
-            # Assuming the same dataset structure as other feedback tools
             dataset_id = os.getenv("FEEDBACK_DATASET_ID", "agent_feedback")
             table_id = "reranker_errors"
             table_ref = f"{self.project_id}.{dataset_id}.{table_id}"
@@ -73,7 +80,6 @@ class Reranker:
         if not self.client or not documents:
             return documents[:top_k]
             
-        # Map search results to RankingRecords
         records = [
             discoveryengine.RankingRecord(
                 id=str(i),
@@ -84,59 +90,41 @@ class Reranker:
         
         request = discoveryengine.RankRequest(
             ranking_config=self.ranking_config,
-            model="semantic-ranker-52b", # Premium cross-encoder model
+            model="semantic-ranker-52b",
             top_n=top_k,
             query=query,
             records=records,
         )
 
         max_retries = 3
-        last_exception = None
-        
         for attempt in range(max_retries):
             try:
                 response = self.client.rank(request)
-                
-                # Map reranked records back to the original document structure
                 reranked_docs = []
                 for record in response.records:
                     idx = int(record.id)
                     doc = documents[idx].copy()
                     doc["rerank_score"] = record.score
                     reranked_docs.append(doc)
-                    
                 return reranked_docs
-                
             except Exception as e:
-                last_exception = e
                 logger.warning(f"Reranking attempt {attempt + 1} failed: {e}")
                 if attempt < max_retries - 1:
-                    wait_time = 2 ** attempt # Exponential backoff: 1s, 2s
-                    time.sleep(wait_time)
+                    time.sleep(2 ** attempt)
                 else:
-                    logger.error(f"❌ Reranking failed after {max_retries} attempts. Falling back to stage 1 results.")
+                    logger.error(f"❌ Reranking failed after {max_retries} attempts.")
                     self._log_error_to_bq(query, e)
-        
         return documents[:top_k]
 
 # Global instance for tool use
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
-# Use the same logic as the retriever: prioritize DATA_STORE_LOCATION for Vertex AI Search/Ranking
-LOCATION = os.getenv("DATA_STORE_LOCATION") or os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+# Data Store location is typically "global"
+LOCATION = os.getenv("DATA_STORE_LOCATION", "global")
 _reranker_instance = Reranker(project_id=PROJECT_ID, location=LOCATION)
 
 @tool
 def rerank_documents(query: str, documents: List[Dict[str, Any]], top_k: int = 5) -> List[Dict[str, Any]]:
     """
     Reranks a list of retrieved document snippets using a semantic cross-encoder model.
-    Use this to improve the relevance of results after an initial retrieval step.
-    
-    Args:
-        query: The original search query.
-        documents: A list of documents retrieved in Stage 1.
-        top_k: The number of top reranked results to return.
-        
-    Returns:
-        A reranked list of documents with semantic scores.
     """
     return _reranker_instance.rerank(query, documents, top_k)

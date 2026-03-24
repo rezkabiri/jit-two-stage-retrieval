@@ -10,29 +10,42 @@ logger = logging.getLogger(__name__)
 
 # Configuration (normally loaded from environment variables)
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
-# Data Store location is typically "global", while Gemini models are regional.
+
 # We use DATA_STORE_LOCATION for the retriever and GOOGLE_CLOUD_LOCATION for the LLM.
-LOCATION = os.getenv("DATA_STORE_LOCATION") or os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+# If DATA_STORE_LOCATION is not set, we default to "global" for Vertex AI Search.
+LOCATION = os.getenv("DATA_STORE_LOCATION", "global")
 DATA_STORE_ID = os.getenv("DATA_STORE_ID")
 
-# Resolve canonical location for the API endpoint
-# Vertex AI Search API endpoints must be global, us, or eu.
-if LOCATION == "global" or LOCATION.startswith("us-"):
-    CANONICAL_LOCATION = "global" if LOCATION == "global" else "us"
+# Resolve canonical location for the API endpoint (global, us, or eu)
+# This handles mapping from regional (us-central1) to canonical (global/us/eu).
+if LOCATION == "global":
+    CANONICAL_LOCATION = "global"
+elif LOCATION in ["us", "eu"]:
+    CANONICAL_LOCATION = LOCATION
+elif LOCATION.startswith("us-"):
+    # If explicitly us-regional, we usually map to "us" multi-region endpoint,
+    # UNLESS the datastore was created in "global".
+    # In this project, infrastructure/modules/vertex_ai/main.tf uses "global".
+    CANONICAL_LOCATION = "us" 
 elif LOCATION.startswith("eu-"):
     CANONICAL_LOCATION = "eu"
 else:
     CANONICAL_LOCATION = "global"
 
+# Override: If the Data Store is known to be global (as in this infra), force global.
+# We'll stick to the environment variable or default to global.
+if os.getenv("DATA_STORE_LOCATION") == "global":
+    CANONICAL_LOCATION = "global"
+
 @tool
 def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict]:
-    # ...
+    """
+    Performs the first stage retrieval from Vertex AI Search with RBAC filtering.
+    """
     if not PROJECT_ID:
         return [{"error": "GOOGLE_CLOUD_PROJECT is not set."}]
 
     # Resolve the correct API endpoint based on canonical location
-    # Valid endpoints are discoveryengine.googleapis.com (global), 
-    # us-discoveryengine.googleapis.com, or eu-discoveryengine.googleapis.com.
     endpoint = "discoveryengine.googleapis.com"
     if CANONICAL_LOCATION in ["us", "eu"]:
         endpoint = f"{CANONICAL_LOCATION}-discoveryengine.googleapis.com"
@@ -40,8 +53,8 @@ def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict
     client_options = {"api_endpoint": endpoint}
     client = discoveryengine.SearchServiceClient(client_options=client_options)
     
-    # Define the serving config path using the CANONICAL_LOCATION for resource mapping
-    # This must match the API endpoint's region.
+    # Define the serving config path
+    # NOTE: location must match where the Data Store was created (global in this repo).
     serving_config = client.serving_config_path(
         project=PROJECT_ID,
         location=CANONICAL_LOCATION,
@@ -49,12 +62,14 @@ def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict
         serving_config="default_config",
     )
 
+    logger.info(f"📡 Using Discovery Engine Endpoint: {endpoint} | Resource Location: {CANONICAL_LOCATION}")
+
     # Resolve roles for RBAC filtering
     roles = get_user_roles(user_email)
     role_list = ", ".join([f'"{r}"' for r in roles])
     role_filter = f"role: ANY({role_list})"
     
-    # Stage 1: Initial Retrieval with Content Search Spec for better snippets
+    # Stage 1: Initial Retrieval
     content_search_spec = discoveryengine.SearchRequest.ContentSearchSpec(
         snippet_spec=discoveryengine.SearchRequest.ContentSearchSpec.SnippetSpec(
             return_snippet=True
@@ -75,13 +90,12 @@ def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict
     try:
         response = client.search(search_request)
         results = []
-        logger.info(f"🔍 Stage 1 Retrieval: Found {len(response.results)} candidates for query: '{query}' with filter: '{role_filter}'")
+        logger.info(f"🔍 Stage 1 Retrieval: Found {len(response.results)} candidates for query: '{query}'")
         
         for result in response.results:
             doc = result.document
             derived = doc.derived_struct_data or {}
             
-            # Extract content from various sources
             snippet = ""
             extractive_answers = derived.get("extractive_answers", [])
             if extractive_answers:
@@ -95,7 +109,7 @@ def stage_1_retrieval(query: str, user_email: Optional[str] = None) -> List[dict
             if not snippet and doc.struct_data:
                 snippet = doc.struct_data.get("content", "")[:500]
 
-            logger.info(f"  - Doc ID: {doc.id} | Title: {derived.get('title', 'Untitled')} | Snippet Length: {len(snippet)}")
+            logger.info(f"  - Doc ID: {doc.id} | Title: {derived.get('title', 'Untitled')}")
 
             results.append({
                 "id": doc.id,
