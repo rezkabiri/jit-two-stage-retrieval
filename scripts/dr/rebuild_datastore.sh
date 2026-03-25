@@ -38,7 +38,7 @@ INGESTION_BUCKET=$(terraform output -raw ingestion_bucket)
 echo "✅ New Data Store ID: $DATA_STORE_ID"
 echo "✅ Ingestion Bucket: $INGESTION_BUCKET"
 
-# 4. Run Full Re-ingestion
+# 4. Run Full Re-ingestion from Knowledge Base
 echo "🔄 Triggering full corpus re-ingestion..."
 cd ../../../ # Back to root
 export PYTHONPATH=$PYTHONPATH:$(pwd)/data-pipeline/ingestion

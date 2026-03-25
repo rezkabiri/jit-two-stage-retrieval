@@ -1,6 +1,6 @@
-# RBAC Testing Guide: Sample Documents
+# Knowledge Base: Golden Dataset for Sanity Checks
 
-This directory contains curated sample documents used to validate the **Role-Based Access Control (RBAC)** logic of the JIT Two-Stage Retrieval Agent.
+This directory contains the **Golden Dataset**—a curated set of sample documents used by developers to perform manual sanity checks and validate the **Role-Based Access Control (RBAC)** logic of the JIT Two-Stage Retrieval Agent.
 
 ## Document Hierarchy & Access Levels
 
@@ -14,7 +14,7 @@ The ingestion pipeline (`data-pipeline/ingestion/parser.py`) automatically assig
 
 ---
 
-## User Personas for Testing
+## User Personas for Sanity Testing
 
 To test the security boundaries, you should simulate three distinct user personas. Identity is derived from the `X-Goog-Authenticated-User-Email` header provided by Identity-Aware Proxy (IAP).
 
@@ -40,12 +40,12 @@ To test the security boundaries, you should simulate three distinct user persona
 
 ---
 
-## How to Conduct the Test
+## How to Conduct the Sanity Check
 
 1.  **Upload Documents**:
     Ensure the latest documents are in the ingestion bucket:
     ```bash
-    gsutil -m cp -r tests/red-team/sample-docs/data/* gs://[YOUR_INGESTION_BUCKET]/
+    gsutil -m cp -r knowledge-base/data/* gs://[YOUR_INGESTION_BUCKET]/
     ```
 
 2.  **Wait for Indexing**:
@@ -53,7 +53,7 @@ To test the security boundaries, you should simulate three distinct user persona
 
 3.  **Simulate Identity**:
     *   **In Production/Staging**: Authenticate via the Load Balancer using the relevant email.
-    *   **In Local Dev**: You can mock the email in `app/main.py` or by setting a local environment variable if your setup supports it.
+    *   **In Local Dev**: You can mock the email in `app/main.py` or by setting a local environment variable.
 
 4.  **Verify Grounding**:
     Ask the bot for the **Source Citation** after each answer to ensure it is actually pulling from the correct restricted document.
