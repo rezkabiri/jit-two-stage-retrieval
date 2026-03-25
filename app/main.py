@@ -1,4 +1,3 @@
-# app/main.py
 import os
 import logging
 
@@ -16,7 +15,6 @@ USE_VERTEX_AI = os.getenv("USE_VERTEX_AI", "true").lower() == "true"
 if USE_VERTEX_AI:
     os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
     # Force a regional location for the LLM. 
-    # DATA_STORE_LOCATION (usually 'global') is handled separately in tools.
     llm_location = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
     if llm_location == "global":
         llm_location = "us-central1"
@@ -28,89 +26,23 @@ if USE_VERTEX_AI:
     
     logger.info(f"🔗 Global Setup: Vertex AI mode enabled. Location: {llm_location}")
 
-import hashlib
-from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
-from pydantic import BaseModel
-from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
-from google.genai import types
-from app.agent import root_agent
-from app.tools.feedback import record_feedback, record_conversation
+from fastapi import FastAPI
+from app.api.v1.router import api_router as v1_router
 
 logger.info("🚀 STARTING AGENT SERVICE")
 
-app = FastAPI()
+app = FastAPI(
+    title="JIT Two-Stage Retrieval RAG API",
+    description="Production-grade Agentic RAG solution on GCP",
+    version="1.0.0"
+)
 
-# Initialize ADK Runner and Session Service
-session_service = InMemorySessionService()
-runner = Runner(agent=root_agent, app_name="rag-app", session_service=session_service, auto_create_session=True)
-
-class ChatRequest(BaseModel):
-    query: str
-
-class FeedbackRequest(BaseModel):
-    messageId: str
-    rating: str
-    comment: str = None
-
-@app.post("/api/chat")
-async def chat(request: ChatRequest, fast_request: Request, background_tasks: BackgroundTasks):
-    user_email = fast_request.headers.get("X-Goog-Authenticated-User-Email", "anonymous")
-    if ":" in user_email:
-        user_email = user_email.split(":")[-1]
-
-    logger.info(f"📩 Incoming chat request from {user_email}: {request.query[:100]}...")
-
-    try:
-        # Generate a stable session ID for the user
-        session_id = hashlib.md5(user_email.encode()).hexdigest()
-        
-        # Inject the user's identity into the query context for the agent
-        user_context = f"[USER IDENTITY: {user_email}]\n\n"
-        full_query = user_context + request.query
-
-        response_text = ""
-        async for event in runner.run_async(
-            user_id=user_email,
-            session_id=session_id,
-            new_message=types.Content(role="user", parts=[types.Part.from_text(text=full_query)])
-        ):
-            if event.is_final_response():
-                response_text = event.content.parts[0].text
-        
-        logger.info(f"✅ Generated response for {user_email} (Length: {len(response_text)})")
-            
-        background_tasks.add_task(
-            record_conversation, 
-            query=request.query, 
-            response=response_text, 
-            user_email=user_email
-        )
-        
-        return {"response": response_text}
-    except Exception as e:
-        logger.error(f"❌ Error during chat: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/api/feedback")
-async def feedback(request: FeedbackRequest, fast_request: Request):
-    user_email = fast_request.headers.get("X-Goog-Authenticated-User-Email", "anonymous")
-    if ":" in user_email:
-        user_email = user_email.split(":")[-1]
-    try:
-        result = record_feedback(
-            message_id=request.messageId,
-            rating=request.rating,
-            user_email=user_email,
-            comment=request.comment
-        )
-        return {"status": "success", "detail": result}
-    except Exception as e:
-        logger.error(f"Error during feedback: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+# Include versioned routers
+app.include_router(v1_router, prefix="/api/v1")
 
 @app.get("/health")
 def health():
+    """Version-independent health check"""
     return {"status": "ok"}
 
 if __name__ == "__main__":

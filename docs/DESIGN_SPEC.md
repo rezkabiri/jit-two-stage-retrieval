@@ -76,9 +76,9 @@ graph TD
 *   **`record_feedback`**: A tool to asynchronously log user feedback to BigQuery.
 
 ## Workflow Orchestration
-The system utilizes a **SequentialAgent** to manage the user journey:
-1.  **Retriever Agent**: Invokes `stage_1_retrieval` to get authorized document candidates.
-2.  **Reranker Agent**: Receives candidates, invokes `rerank_documents`, and generates the final grounded response.
+The system utilizes a unified **RAG Agent** to manage the user journey in a single flow:
+1.  **Retrieval**: Invokes `stage_1_retrieval` to get authorized document candidates.
+2.  **Reranking & Generation**: Invokes `rerank_documents` and generates the final grounded response in one turn.
 
 ## Constraints & Safety Rules
 *   **Data Leakage**: The agent MUST NOT access or summarize documents if the RBAC metadata filter returns zero results or if the user identity is missing.
@@ -115,7 +115,8 @@ graph TD
 ```
 
 ### Testing Tiers
-1.  **Agent Core (Unit/Integration)**: Validates SequentialAgent logic, RBAC mapping in `roles.py`, and retriever tool query construction.
-2.  **Ingestion ETL (Unit)**: Verifies markdown/PDF parsing and RBAC metadata extraction logic in `data-pipeline`.
+1.  **Agent Core (Unit/Integration)**: Validates unified RAG Agent logic, RBAC mapping in `roles.py`, and retriever tool query construction.
+2.  **Security Isolation (Red Teaming)**: Automated checks in `tests/security/` to ensure users cannot retrieve unauthorized documents.
+3.  **Ingestion ETL (Unit)**: Verifies markdown/PDF parsing and RBAC metadata extraction logic in `data-pipeline`.
 3.  **Infrastructure (Validation)**: Performs Terraform `validate` and `fmt` checks alongside live resource health checks via `validate_infra.sh`.
 4.  **ADK Evaluation (Quality Gate)**: Automated grounding and recall assessment using the golden evaluation set.

@@ -1,4 +1,3 @@
-
 # app/tests/test_api.py
 import pytest
 from fastapi.testclient import TestClient
@@ -13,12 +12,12 @@ def test_health_check():
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
-@patch("app.main.runner.run_async")
-@patch("app.main.record_conversation")
+@patch("app.api.v1.endpoints.chat.runner.run_async")
+@patch("app.api.v1.endpoints.chat.record_conversation")
 def test_chat_endpoint(mock_record, mock_run_async):
     """Verify chat endpoint extracts user email and returns response."""
     # Mock runner events
-    mock_event = MagicMock() # Use regular MagicMock for synchronous checks
+    mock_event = MagicMock() 
     mock_event.is_final_response.return_value = True
     mock_event.content.parts = [MagicMock(text="Hello, I am an AI.")]
     
@@ -28,13 +27,14 @@ def test_chat_endpoint(mock_record, mock_run_async):
     mock_run_async.return_value = mock_generator()
 
     headers = {"X-Goog-Authenticated-User-Email": "accounts.google.com:test@example.com"}
-    response = client.post("/api/chat", json={"query": "hi"}, headers=headers)
+    # Updated to v1 path
+    response = client.post("/api/v1/chat", json={"query": "hi"}, headers=headers)
 
     assert response.status_code == 200
     assert "response" in response.json()
     assert response.json()["response"] == "Hello, I am an AI."
 
-@patch("app.main.record_feedback")
+@patch("app.api.v1.endpoints.feedback.record_feedback")
 def test_feedback_endpoint(mock_record):
     """Verify feedback endpoint passes correct data to record_feedback."""
     mock_record.return_value = "Success"
@@ -45,7 +45,8 @@ def test_feedback_endpoint(mock_record):
         "rating": "up",
         "comment": "Good job"
     }
-    response = client.post("/api/feedback", json=payload, headers=headers)
+    # Updated to v1 path
+    response = client.post("/api/v1/feedback", json=payload, headers=headers)
 
     assert response.status_code == 200
     assert response.json()["status"] == "success"

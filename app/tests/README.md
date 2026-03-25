@@ -4,10 +4,10 @@
 This folder contains unit and integration tests for the Python FastAPI agent service and its supporting tools.
 
 ### Key Components Tested:
-- **Agent Logic**: Verifying the SequentialAgent setup and instructions.
+- **Agent Logic**: Verifying the unified RAG Agent setup and instructions.
 - **RBAC Mapping**: Ensuring `roles.py` correctly identifies user permissions based on emails.
 - **Tool Integration**: Validating that the `retriever` and `feedback` tools construct requests correctly.
-- **API Endpoints**: Testing `/api/chat`, `/api/feedback`, and `/health` using FastAPI TestClient.
+- **API Endpoints**: Testing `/api/v1/chat`, `/api/v1/feedback`, and `/health` using FastAPI TestClient.
 
 ## How to Run
 Ensure you are in the `app/` directory and have dependencies installed:

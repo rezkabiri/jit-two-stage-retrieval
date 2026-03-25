@@ -46,7 +46,7 @@ function App() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch('/api/v1/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: input }),
@@ -80,7 +80,7 @@ function App() {
   const handleFeedback = async (messageId: string, rating: 'up' | 'down') => {
     console.log(`Feedback for ${messageId}: ${rating}`);
     try {
-      await fetch('/api/feedback', {
+      await fetch('/api/v1/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messageId, rating }),

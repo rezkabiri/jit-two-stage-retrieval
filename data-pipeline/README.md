@@ -22,7 +22,7 @@ graph TD
 3.  **Parsing & Enrichment**:
     *   **Parser**: Extracts raw text from the document (using `pypdf` for PDFs).
     *   **RBAC Mapping**: Inspects the origin folder path (e.g., `gs://bucket/finance/*.pdf`) and automatically assigns security metadata (e.g., `role: finance`).
-4.  **Indexing**: The enriched text and metadata are securely pushed to the **Vertex AI Search (Discovery Engine)** data store, ready for Stage 1 retrieval.
+4.  **Indexing**: The enriched text and metadata are securely pushed to the **Vertex AI Search (Discovery Engine)** data store, ready for the agent's retrieval turn.
 
 ## Directory Structure
 - `ingestion/main.py`: The entry point for the Cloud Function.

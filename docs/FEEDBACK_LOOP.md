@@ -7,7 +7,7 @@ The JIT Two-Stage Retrieval Agent includes a built-in feedback loop that capture
 ```mermaid
 graph TD
     User((User)) -->|Click 👍/👎| UI[React UI]
-    UI -->|POST /api/feedback| API[FastAPI Agent]
+    UI -->|POST /api/v1/feedback| API[FastAPI Agent]
     
     subgraph Backend Logic
         API -->|Call Tool| RF[record_feedback]
@@ -24,7 +24,7 @@ graph TD
 ```
 
 1.  **User Interaction**: The user clicks 👍 or 👎 in the web UI.
-2.  **API Call**: The frontend sends a `POST` request to `/api/feedback`.
+2.  **API Call**: The frontend sends a `POST` request to `/api/v1/feedback`.
 3.  **BigQuery Storage**: The backend agent calls the `record_feedback` tool, which streams the data into the `agent_feedback.user_feedback` BigQuery table.
 4.  **Full Trace**: Simultaneously, every full conversation is automatically logged to the `agent_feedback.conversations` table via a background task.
 
@@ -37,7 +37,7 @@ graph TD
 2.  Ask any question (e.g., "What is the 2025 global outlook?").
 3.  Once the response is received, look for the thumbs-up/down icons below the message.
 4.  Click **Thumbs Up** 👍.
-5.  Open the **Network Tab** in your browser's Developer Tools and verify that a request to `/api/feedback` returned a `200 OK`.
+5.  Open the **Network Tab** in your browser's Developer Tools and verify that a request to `/api/v1/feedback` returned a `200 OK`.
 
 ### 2. Verification via BigQuery Console
 1.  Go to the [BigQuery Console](https://console.cloud.google.com/bigquery).
@@ -57,7 +57,7 @@ You can simulate feedback without the UI using `curl`:
 
 ```bash
 # Replace with your actual LB URL and a test message ID
-curl -X POST https://rag-stage.example.com/api/feedback 
+curl -X POST https://rag-stage.example.com/api/v1/feedback 
   -H "Content-Type: application/json" 
   -d '{
     "messageId": "test-123",

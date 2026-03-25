@@ -36,5 +36,5 @@ A sleek, minimal chat interface for the JIT Two-Stage Retrieval Agentic RAG syst
 
 ## API Integration
 The frontend expects two main API endpoints (proxied to the ADK backend):
-- `POST /api/chat`: Sends a query to the agent.
-- `POST /api/feedback`: Logs user feedback (thumbs up/down) to BigQuery.
+- `POST /api/v1/chat`: Sends a query to the agent.
+- `POST /api/v1/feedback`: Logs user feedback (thumbs up/down) to BigQuery.
