@@ -77,7 +77,7 @@ class TestRBACIsolation:
         blindly trusted if someone tries to inject roles via email string.
         """
         # Attempting to inject a role in the email string
-        stage_1_retrieval.func("query", user_email="user@gmail.com", "admin")
+        stage_1_retrieval.func("query", user_email='user@gmail.com", "admin')
         
         args, _ = mock_search_client.search.call_args
         request = args[0]
