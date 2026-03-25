@@ -112,6 +112,12 @@ steps:
           --region=${_REGION} \
           --platform=managed \
           --no-allow-unauthenticated
+        gcloud run deploy rag-ui-stage \
+          --project=${_STAGING_PROJECT_ID} \
+          --image=${_REGION}-docker.pkg.dev/${_STAGING_PROJECT_ID}/rag-repo/ui:${SHORT_SHA} \
+          --region=${_REGION} \
+          --platform=managed \
+          --no-allow-unauthenticated
     waitFor: ['test-agent-core', 'test-ingestion-pipeline', 'test-security-isolation', 'validate-terraform', 'push-images-staging']
 
 
