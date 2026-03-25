@@ -29,8 +29,20 @@ def record_feedback(
         return "Error: GOOGLE_CLOUD_PROJECT is not set."
 
     client = bigquery.Client()
-    # ...
-    # ...
+    table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
+
+    # Schema: message_id (STRING), rating (STRING), user_email (STRING), 
+    # comment (STRING), timestamp (TIMESTAMP)
+    row_to_insert = [
+        {
+            "message_id": message_id,
+            "rating": rating,
+            "user_email": user_email or "anonymous",
+            "comment": comment or "",
+            "timestamp": datetime.datetime.utcnow().isoformat()
+        }
+    ]
+
     try:
         errors = client.insert_rows_json(table_ref, row_to_insert)
         if errors == []:
@@ -60,8 +72,19 @@ def record_conversation(
         return "Error: GOOGLE_CLOUD_PROJECT is not set."
 
     client = bigquery.Client()
-    # ...
-    # ...
+    # Assuming a 'conversations' table in the same dataset
+    table_ref = f"{PROJECT_ID}.{DATASET_ID}.conversations"
+
+    row_to_insert = [
+        {
+            "query": query,
+            "response": response,
+            "user_email": user_email,
+            "metadata": str(metadata) if metadata else "{}",
+            "timestamp": datetime.datetime.utcnow().isoformat()
+        }
+    ]
+
     try:
         # We use insert_rows_json for simplicity, though for high volume, 
         # a streaming buffer or load job might be better.

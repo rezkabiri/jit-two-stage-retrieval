@@ -34,8 +34,9 @@ def map_rbac_roles(file_path: str) -> Dict[str, Any]:
     logger.info(f"🏷️ Mapping RBAC roles for path: {file_path}")
     path_parts = file_path.split("/")
     
-    # ... (role assignment logic)
-    # ...
+    # Default role
+    role = "public"
+    
     # Map common folder patterns
     if "finance" in path_parts:
         role = "finance"
