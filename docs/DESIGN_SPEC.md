@@ -24,7 +24,7 @@ graph TD
 ```
 
 *   **Stage 1 (Retrieval):** High-speed search over a large vector/document space using **Vertex AI Search**. Security is enforced via **RBAC-based metadata filtering**, ensuring users only retrieve documents they are authorized to see.
-*   **Stage 2 (Reasoning & Reranking):** An **ADK-based agent** receives the top results from Stage 1. It performs deep reasoning and reranking using **Cross-Encoder embeddings** to ensure the final response is contextually accurate, grounded, and high-fidelity.
+*   **Stage 2 (Reasoning & Reranking):** The unified **RAG Agent** receives the top results from Stage 1. It performs deep reasoning and reranking using **Cross-Encoder embeddings** via the Vertex AI Ranking API to ensure the final response is contextually accurate, grounded, and high-fidelity.
 
 The solution is protected by **Identity-Aware Proxy (IAP)**, which provides secure, identity-based access without the need for custom auth logic in the application.
 

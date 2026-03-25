@@ -3,7 +3,7 @@
 This directory contains the evaluation logic used to validate the quality, precision, and security of the JIT Two-Stage Retrieval Agent.
 
 ## Evaluation Strategy
-Unlike unit tests that check for code crashes, these **AI Evaluations** use a "model-as-a-judge" (Gemini 3 Flash) to verify that the agent's reasoning is correct, grounded in the retrieved documents, and adheres to security boundaries.
+Unlike unit tests that check for code crashes, these **AI Evaluations** use a "model-as-a-judge" (gemini-2.5-pro) to verify that the agent's reasoning is correct, grounded in the retrieved documents, and adheres to security boundaries.
 
 ### Core Metrics
 - **`tool_trajectory_avg_score`**: Ensures the agent calls the `stage_1_retrieval` tool with the correct query and, crucially, the user's authenticated email for RBAC filtering.

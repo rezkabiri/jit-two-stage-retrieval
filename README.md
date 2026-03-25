@@ -13,22 +13,23 @@ graph LR
     Agent --> Response[Grounded Answer]
 ```
 
-- **Two-Stage Retrieval**: Stage 1 (Fast Retrieval via Vertex AI Search) + Stage 2 (Deep Reasoning & Reranking via ADK Agent).
+- **Unified RAG Agent**: A single high-performance agent that orchestrates both retrieval and semantic reranking in a single turn for maximum grounding accuracy.
+- **Two-Stage Workflow**: Seamless execution of Stage 1 (Fast Retrieval via Vertex AI Search) and Stage 2 (Deep Reasoning & Reranking via Vertex AI Ranking API).
 - **Identity-Aware Proxy (IAP)**: Zero-trust authentication out-of-the-box.
-- **RBAC-Aware Filtering**: Security tags are injected at the retrieval layer to ensure data isolation.
+- **RBAC-Aware Filtering**: Security tags are injected at the retrieval layer based on IAP identity to ensure data isolation.
 - **Multi-Environment CI/CD**: Fully automated deployment to `stage` and `prod` GCP folders via Google Cloud Build.
 - **Data Engine**: Automated ETL pipeline for GCS-to-Vertex AI Search ingestion with metadata enrichment.
 
 ## 📁 Repository Structure
 ```text
-├── app/                # ADK Agent (Stage 2 logic)
-├── frontend/           # React Chat UI
-├── data-pipeline/      # ETL & Ingestion (Python)
+├── app/                # unified RAG Agent (FastAPI)
+├── frontend/           # React Chat UI (Vite)
+├── data-pipeline/      # ETL & Ingestion (Python Cloud Functions)
+├── knowledge-base/     # Golden Dataset for manual sanity checks
 ├── infrastructure/     # Terraform IaC (Stage & Prod)
 ├── cicd/               # Deployment Pipeline (Cloud Build)
-├── eval/               # ADK Evaluation Sets
-├── scripts/            # Bootstrap & Utility scripts
-└── docs/               # Technical use cases & documentation
+├── scripts/            # Bootstrap, DR, and Red Team scripts
+└── docs/               # Technical specs and strategy guides
 ```
 
 ## 🚀 CI/CD & Evaluation Gate
