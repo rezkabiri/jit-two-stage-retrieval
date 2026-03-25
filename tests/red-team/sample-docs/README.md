@@ -45,7 +45,7 @@ To test the security boundaries, you should simulate three distinct user persona
 1.  **Upload Documents**:
     Ensure the latest documents are in the ingestion bucket:
     ```bash
-    gsutil -m cp -r sample-docs/data/* gs://[YOUR_INGESTION_BUCKET]/
+    gsutil -m cp -r tests/red-team/sample-docs/data/* gs://[YOUR_INGESTION_BUCKET]/
     ```
 
 2.  **Wait for Indexing**:
