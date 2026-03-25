@@ -43,7 +43,7 @@ graph TD
         direction LR
         CB --> Docker[Docker Build]
         CB --> Unit[Agent Unit Tests]
-        CB --> Security[Security Isolation]
+        CB --> RedTeam[Red Team Security]
         CB --> ETL[ETL Parser Tests]
         CB --> TF[Terraform Validate]
     end

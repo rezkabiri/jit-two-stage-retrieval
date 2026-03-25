@@ -103,7 +103,7 @@ graph TD
         direction LR
         CB --> Build[Docker Build & Push]
         CB --> UnitTests[Agent Core Unit Tests]
-        CB --> SecurityTests[Security Isolation Tests]
+        CB --> RedTeamTests[Red Team Security Tests]
         CB --> ETLTests[Ingestion Parser Tests]
         CB --> InfraTests[Terraform Validate]
     end
@@ -116,7 +116,7 @@ graph TD
 
 ### Testing Tiers
 1.  **Agent Core (Unit/Integration)**: Validates unified RAG Agent logic, RBAC mapping in `roles.py`, and retriever tool query construction.
-2.  **Security Isolation (Red Teaming)**: Automated checks in `tests/security/` to ensure users cannot retrieve unauthorized documents.
+2.  **Red Team Isolation (Security)**: Automated checks in `tests/red-team/` to ensure users cannot retrieve unauthorized documents.
 3.  **Ingestion ETL (Unit)**: Verifies markdown/PDF parsing and RBAC metadata extraction logic in `data-pipeline`.
 3.  **Infrastructure (Validation)**: Performs Terraform `validate` and `fmt` checks alongside live resource health checks via `validate_infra.sh`.
 4.  **ADK Evaluation (Quality Gate)**: Automated grounding and recall assessment using the golden evaluation set.

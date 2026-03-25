@@ -85,7 +85,7 @@ steps:
       - |
         pip install -r app/requirements.txt pytest --quiet
         export PYTHONPATH=$$PYTHONPATH:$$(pwd)
-        python3 -m pytest tests/security/
+        python3 -m pytest tests/red-team/
     waitFor: ['-'] # Start immediately
 
   - name: 'hashicorp/terraform:latest'

@@ -1,8 +1,8 @@
-# Security & Resilience Testing
+# Red Team: Security & Resilience Testing
 
-This directory contains specialized tests for "Red Teaming" and "Chaos Engineering" simulations.
+This directory contains specialized tests for "Red Teaming" and "Chaos Engineering" simulations to ensure production-grade security.
 
-## RBAC Isolation Tests (`tests/security/test_rbac_isolation.py`)
+## RBAC Isolation Tests (`tests/red-team/test_rbac_isolation.py`)
 
 These tests act as an automated security gate to ensure that users can never retrieve documents outside of their authorized scope.
 
@@ -15,7 +15,7 @@ These tests act as an automated security gate to ensure that users can never ret
 ### Running the tests:
 ```bash
 export PYTHONPATH=$PYTHONPATH:.
-pytest tests/security/
+pytest tests/red-team/
 ```
 
 ## Upcoming Tests (See todo.md)
