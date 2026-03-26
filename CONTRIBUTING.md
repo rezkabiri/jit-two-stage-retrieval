@@ -93,3 +93,4 @@ This project uses **Google Cloud Build** (`cicd/cloudbuild.yaml`).
 -   **Data Corrupted?** Run the DR Rebuild Drill: `./scripts/dr/rebuild_datastore.sh`.
 -   **RBAC Issues?** Check the `X-Goog-Authenticated-User-Email` header in the agent logs.
 -   **Deployment Failing?** Ensure the `discoveryengine.googleapis.com` API was enabled via the bootstrap script.
+-   **System Healthy?** Check the **JIT RAG System Health** dashboard in Cloud Monitoring for real-time latency and error rates.

@@ -90,6 +90,22 @@ graph TD
 
 ---
 
+## 📊 Monitoring & Observability
+
+The system includes a pre-configured **Cloud Monitoring Dashboard** to track system health, performance, and reliability in real-time.
+
+### Key Metrics Tracked
+- **Request Volume**: Total traffic hitting the RAG Agent and UI.
+- **Latency (p95)**: End-to-end response times for grounding turns.
+- **Error Rates**: Real-time tracking of 4xx and 5xx response codes.
+- **Feedback Ingestion**: Verification of user sentiment data streaming into BigQuery.
+
+### How to Access
+1.  Navigate to the [**Cloud Monitoring Dashboards**](https://console.cloud.google.com/monitoring/dashboards) in the GCP Console.
+2.  Search for **`JIT RAG System Health (stage/prod)`**.
+
+---
+
 ## 📁 Repository Structure
 ```text
 ├── app/                # unified RAG Agent (FastAPI + ADK)
@@ -166,5 +182,6 @@ terraform apply
 - [**Technical Design Spec**](docs/DESIGN_SPEC.md): Deep dive into architecture.
 - [**API Versioning**](docs/API_VERSIONING_STRATEGY.md): Path-based versioning strategy.
 - [**Model Provider ADR**](docs/ADR_MODEL_PROVIDER_FLEXIBILITY.md): AI Studio vs Vertex AI.
+- [**Monitoring & Observability**](docs/MONITORING_AND_OBSERVABILITY.md): System health and metrics.
 - [**Industry Use Cases**](docs/industry_use_cases_rag.md): Real-world application scenarios.
 - [**Contributing Guide**](CONTRIBUTING.md): How to get started as a developer.
