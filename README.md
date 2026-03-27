@@ -8,7 +8,7 @@ A high-performance, production-grade Agentic RAG solution on Google Cloud Platfo
 
 This project implements a two-stage retrieval pattern that balances high-speed discovery with deep semantic reasoning.
 
-![Two-Stage RAG Architecture](docs/assets/2stage-rag.png)
+<img src="docs/assets/2stage-rag.png" alt="Two-Stage RAG Architecture" width="800" />
 
 ### Key Technical Pillars
 1.  **Unified RAG Agent**: A single high-performance agent (built with ADK) that orchestrates retrieval and semantic reranking in a single turn for maximum grounding accuracy.
@@ -24,7 +24,7 @@ This project implements a two-stage retrieval pattern that balances high-speed d
 
 The ingestion pipeline ensures that every document uploaded to GCS is parsed, enriched with RBAC metadata, and indexed securely.
 
-![Data Engine ETL Pipeline](docs/assets/etl-pipe.png)
+<img src="docs/assets/etl-pipe.png" alt="Data Engine ETL Pipeline" width="800" />
 
 -   **Automated Triggers**: Eventarc reacts to GCS uploads in real-time.
 -   **Intelligent Parsing**: Extracts text from PDFs and Markdown while preserving structure.
@@ -36,7 +36,7 @@ The ingestion pipeline ensures that every document uploaded to GCS is parsed, en
 
 Every interaction is tracked to improve model performance and retrieval accuracy over time.
 
-![Continuous Improvement Feedback Loop](docs/assets/feedback-pipe.png)
+<img src="docs/assets/feedback-pipe.png" alt="Continuous Improvement Feedback Loop" width="800" />
 
 -   **User Sentiment**: Direct 👍/👎 feedback is streamed to BigQuery.
 -   **Conversation Tracing**: Full prompt-response pairs are logged for auditability and RAG fine-tuning.
@@ -78,7 +78,7 @@ The system includes a pre-configured **Cloud Monitoring Dashboard** to track sys
 
 We use **Google Cloud Build** to implement a "Fast-Fail" pipeline with strict quality gates.
 
-![CI/CD & Evaluation Gate](docs/assets/cicd.png)
+<img src="docs/assets/cicd.png" alt="CI/CD & Evaluation Gate" width="800" />
 
 ---
 
