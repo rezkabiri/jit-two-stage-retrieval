@@ -6,27 +6,9 @@ A high-performance, production-grade Agentic RAG solution on Google Cloud Platfo
 
 ## 🏗️ Architecture Overview
 
-This project implements a "Just-In-Time" (JIT) retrieval pattern that balances high-speed discovery with deep semantic reasoning.
+This project implements a two-stage retrieval pattern that balances high-speed discovery with deep semantic reasoning.
 
-```mermaid
-graph TD
-    User([User]) --> IAP[Identity-Aware Proxy]
-    IAP --> Backend[Cloud Run Backend]
-    
-    subgraph "Unified Agent Workflow"
-    Backend --> RagAgent[RAG Agent]
-    RagAgent --> Stage1Tool[stage_1_retrieval]
-    Stage1Tool --> VAIS[Vertex AI Search]
-    VAIS -- "RBAC Filter" --> Docs[(Document Corpus)]
-    
-    RagAgent -- "Initial Snippets" --> Stage2Tool[rerank_documents]
-    Stage2Tool --> VAR[Vertex AI Ranking API]
-    VAR -- "Cross-Encoder Score" --> Reranked[Top K Reranked Docs]
-    end
-    
-    Reranked --> RagAgent
-    RagAgent -- "Grounded Response" --> User
-```
+![Two-Stage RAG Architecture](docs/assets/2stage-rag.png)
 
 ### Key Technical Pillars
 1.  **Unified RAG Agent**: A single high-performance agent (built with ADK) that orchestrates retrieval and semantic reranking in a single turn for maximum grounding accuracy.
@@ -42,19 +24,7 @@ graph TD
 
 The ingestion pipeline ensures that every document uploaded to GCS is parsed, enriched with RBAC metadata, and indexed securely.
 
-```mermaid
-graph TD
-    User([User/System]) -->|Upload PDF, TXT, MD| GCS[GCS Ingestion Bucket]
-    GCS -->|Eventarc Trigger| CF[Cloud Function: process_gcs_upload]
-    
-    subgraph ETL Pipeline
-        CF --> Parser[Document Parser]
-        Parser --> RBAC[RBAC Mapper]
-        RBAC -- Extracts Text & Metadata --> Meta[Enriched Document]
-    end
-    
-    Meta -->|Index Request| VAIS[(Vertex AI Search / Discovery Engine)]
-```
+![Data Engine ETL Pipeline](docs/assets/etl-pipe.png)
 
 -   **Automated Triggers**: Eventarc reacts to GCS uploads in real-time.
 -   **Intelligent Parsing**: Extracts text from PDFs and Markdown while preserving structure.
@@ -66,24 +36,7 @@ graph TD
 
 Every interaction is tracked to improve model performance and retrieval accuracy over time.
 
-```mermaid
-graph TD
-    User((User)) -->|Click 👍/👎| UI[React UI]
-    UI -->|POST /api/v1/feedback| API[FastAPI Agent]
-    
-    subgraph Backend Logic
-        API -->|Call Tool| RF[record_feedback]
-        API -->|Background Task| RC[record_conversation]
-    end
-    
-    subgraph BigQuery [Google BigQuery]
-        RF -->|Stream Row| UF_Table[(user_feedback)]
-        RC -->|Stream Row| C_Table[(conversations)]
-    end
-    
-    style BigQuery fill:#f9f,stroke:#333,stroke-width:2px
-    style User fill:#dfd,stroke:#333,stroke-width:2px
-```
+![Continuous Improvement Feedback Loop](docs/assets/feedback-pipe.png)
 
 -   **User Sentiment**: Direct 👍/👎 feedback is streamed to BigQuery.
 -   **Conversation Tracing**: Full prompt-response pairs are logged for auditability and RAG fine-tuning.
@@ -125,24 +78,7 @@ The system includes a pre-configured **Cloud Monitoring Dashboard** to track sys
 
 We use **Google Cloud Build** to implement a "Fast-Fail" pipeline with strict quality gates.
 
-```mermaid
-graph TD
-    Push[Push to main] --> CB[Cloud Build]
-    
-    subgraph Parallel_Checks [Parallel Validation]
-        direction LR
-        CB --> Docker[Docker Build]
-        CB --> Unit[Agent Unit Tests]
-        CB --> RedTeam[Red Team Security]
-        CB --> ETL[ETL Parser Tests]
-        CB --> TF[Terraform Validate]
-    end
-    
-    Parallel_Checks --> DeployStaging[Deploy to Staging]
-    DeployStaging --> EvalGate[ADK Evaluation Gate]
-    EvalGate -- "Pass" --> Promote[Promote to Production]
-    EvalGate -- "Fail" --> Block[Block Deployment]
-```
+![CI/CD & Evaluation Gate](docs/assets/cicd.png)
 
 ---
 
