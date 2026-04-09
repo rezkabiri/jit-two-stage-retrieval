@@ -13,8 +13,8 @@ logger.info("🚀 Initializing Agent module...")
 # Set USE_VERTEX_AI=true to use Vertex AI Model Garden (default for reliability)
 # Set USE_VERTEX_AI=false to use AI Studio (Gemini API)
 USE_VERTEX_AI = os.getenv("USE_VERTEX_AI", "true").lower() == "true"
-AI_STUDIO_MODEL = os.getenv("AI_STUDIO_MODEL", "gemini-2.5-pro")
-VERTEX_AI_MODEL = os.getenv("VERTEX_AI_MODEL", "gemini-2.5-pro")
+AI_STUDIO_MODEL = os.getenv("AI_STUDIO_MODEL", "gemini-2.0-flash-lite")
+VERTEX_AI_MODEL = os.getenv("VERTEX_AI_MODEL", "gemini-2.0-flash-lite")
 
 if USE_VERTEX_AI:
     MODEL_NAME = VERTEX_AI_MODEL
